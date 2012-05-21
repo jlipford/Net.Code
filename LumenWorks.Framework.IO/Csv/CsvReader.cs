@@ -24,6 +24,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
+using System.Text;
 using Debug = System.Diagnostics.Debug;
 using System.Globalization;
 using System.IO;
@@ -36,7 +38,7 @@ namespace LumenWorks.Framework.IO.Csv
 	/// Represents a reader that provides fast, non-cached, forward-only access to CSV data.  
 	/// </summary>
 	public partial class CsvReader
-		: IDataReader, IEnumerable<string[]>, IDisposable
+		: IDataReader, IEnumerable<string[]>
 	{
 		#region Constants
 
@@ -77,7 +79,7 @@ namespace LumenWorks.Framework.IO.Csv
 		#region Settings
 
 		/// <summary>
-		/// Contains the <see cref="T:TextReader"/> pointing to the CSV file.
+		/// Contains the <see cref="TextReader"/> pointing to the CSV file.
 		/// </summary>
 		private TextReader _reader;
 
@@ -157,20 +159,10 @@ namespace LumenWorks.Framework.IO.Csv
 
 		/// <summary>
 		/// Contains the current record index in the CSV file.
-		/// A value of <see cref="M:Int32.MinValue"/> means that the reader has not been initialized yet.
+		/// A value of <see cref="Int32.MinValue"/> means that the reader has not been initialized yet.
 		/// Otherwise, a negative value means that no record has been read yet.
 		/// </summary>
 		private long _currentRecordIndex;
-
-		/// <summary>
-		/// Contains the starting position of the next unread field.
-		/// </summary>
-		private int _nextFieldStart;
-
-		/// <summary>
-		/// Contains the index of the next unread field.
-		/// </summary>
-		private int _nextFieldIndex;
 
 		/// <summary>
 		/// Contains the array of the field values for the current record.
@@ -184,24 +176,9 @@ namespace LumenWorks.Framework.IO.Csv
 		private int _fieldCount;
 
 		/// <summary>
-		/// Contains the read buffer.
-		/// </summary>
-		private char[] _buffer;
-
-		/// <summary>
-		/// Contains the current read buffer length.
-		/// </summary>
-		private int _bufferLength;
-
-		/// <summary>
 		/// Indicates if the end of the reader has been reached.
 		/// </summary>
 		private bool _eof;
-
-		/// <summary>
-		/// Indicates if the last read operation reached an EOL character.
-		/// </summary>
-		private bool _eol;
 
 		/// <summary>
 		/// Indicates if the first record is in cache.
@@ -231,12 +208,12 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Initializes a new instance of the CsvReader class.
 		/// </summary>
-		/// <param name="reader">A <see cref="T:TextReader"/> pointing to the CSV file.</param>
+		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
 		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
-		/// <exception cref="T:ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		///		<paramref name="reader"/> is a <see langword="null"/>.
 		/// </exception>
-		/// <exception cref="T:ArgumentException">
+		/// <exception cref="ArgumentException">
 		///		Cannot read from <paramref name="reader"/>.
 		/// </exception>
 		public CsvReader(TextReader reader, bool hasHeaders)
@@ -247,13 +224,13 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Initializes a new instance of the CsvReader class.
 		/// </summary>
-		/// <param name="reader">A <see cref="T:TextReader"/> pointing to the CSV file.</param>
+		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
 		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
 		/// <param name="bufferSize">The buffer size in bytes.</param>
-		/// <exception cref="T:ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		///		<paramref name="reader"/> is a <see langword="null"/>.
 		/// </exception>
-		/// <exception cref="T:ArgumentException">
+		/// <exception cref="ArgumentException">
 		///		Cannot read from <paramref name="reader"/>.
 		/// </exception>
 		public CsvReader(TextReader reader, bool hasHeaders, int bufferSize)
@@ -264,13 +241,13 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Initializes a new instance of the CsvReader class.
 		/// </summary>
-		/// <param name="reader">A <see cref="T:TextReader"/> pointing to the CSV file.</param>
+		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
 		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
 		/// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
-		/// <exception cref="T:ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		///		<paramref name="reader"/> is a <see langword="null"/>.
 		/// </exception>
-		/// <exception cref="T:ArgumentException">
+		/// <exception cref="ArgumentException">
 		///		Cannot read from <paramref name="reader"/>.
 		/// </exception>
 		public CsvReader(TextReader reader, bool hasHeaders, char delimiter)
@@ -281,14 +258,14 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Initializes a new instance of the CsvReader class.
 		/// </summary>
-		/// <param name="reader">A <see cref="T:TextReader"/> pointing to the CSV file.</param>
+		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
 		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
 		/// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
 		/// <param name="bufferSize">The buffer size in bytes.</param>
-		/// <exception cref="T:ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		///		<paramref name="reader"/> is a <see langword="null"/>.
 		/// </exception>
-		/// <exception cref="T:ArgumentException">
+		/// <exception cref="ArgumentException">
 		///		Cannot read from <paramref name="reader"/>.
 		/// </exception>
 		public CsvReader(TextReader reader, bool hasHeaders, char delimiter, int bufferSize)
@@ -299,7 +276,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Initializes a new instance of the CsvReader class.
 		/// </summary>
-		/// <param name="reader">A <see cref="T:TextReader"/> pointing to the CSV file.</param>
+		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
 		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
 		/// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
 		/// <param name="quote">The quotation character wrapping every field (default is ''').</param>
@@ -309,10 +286,10 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </param>
 		/// <param name="comment">The comment character indicating that a line is commented out (default is '#').</param>
 		/// <param name="trimmingOptions">Determines which values should be trimmed.</param>
-		/// <exception cref="T:ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		///		<paramref name="reader"/> is a <see langword="null"/>.
 		/// </exception>
-		/// <exception cref="T:ArgumentException">
+		/// <exception cref="ArgumentException">
 		///		Cannot read from <paramref name="reader"/>.
 		/// </exception>
 		public CsvReader(TextReader reader, bool hasHeaders, char delimiter, char quote, char escape, char comment, ValueTrimmingOptions trimmingOptions)
@@ -323,7 +300,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Initializes a new instance of the CsvReader class.
 		/// </summary>
-		/// <param name="reader">A <see cref="T:TextReader"/> pointing to the CSV file.</param>
+		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
 		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
 		/// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
 		/// <param name="quote">The quotation character wrapping every field (default is ''').</param>
@@ -334,7 +311,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <param name="comment">The comment character indicating that a line is commented out (default is '#').</param>
 		/// <param name="trimmingOptions">Determines which values should be trimmed.</param>
 		/// <param name="bufferSize">The buffer size in bytes.</param>
-		/// <exception cref="T:ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		///		<paramref name="reader"/> is a <see langword="null"/>.
 		/// </exception>
 		/// <exception cref="ArgumentOutOfRangeException">
@@ -342,6 +319,8 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </exception>
 		public CsvReader(TextReader reader, bool hasHeaders, char delimiter, char quote, char escape, char comment, ValueTrimmingOptions trimmingOptions, int bufferSize)
 		{
+			_fields = new string[0];
+			_fieldHeaders = new string[0];
 #if DEBUG
 			_allocStack = new System.Diagnostics.StackTrace();
 #endif
@@ -356,16 +335,15 @@ namespace LumenWorks.Framework.IO.Csv
 
 			if (reader is StreamReader)
 			{
-				Stream stream = ((StreamReader) reader).BaseStream;
+				Stream stream = ((StreamReader)reader).BaseStream;
 
 				if (stream.CanSeek)
 				{
 					// Handle bad implementations returning 0 or less
 					if (stream.Length > 0)
-						_bufferSize = (int) Math.Min(bufferSize, stream.Length);
+						_bufferSize = (int)Math.Min(bufferSize, stream.Length);
 				}
 			}
-
 			_reader = reader;
 			_delimiter = delimiter;
 			_quote = quote;
@@ -392,7 +370,7 @@ namespace LumenWorks.Framework.IO.Csv
 		public event EventHandler<ParseErrorEventArgs> ParseError;
 
 		/// <summary>
-		/// Raises the <see cref="M:ParseError"/> event.
+		/// Raises the <see cref="ParseError"/> event.
 		/// </summary>
 		/// <param name="e">The <see cref="ParseErrorEventArgs"/> that contains the event data.</param>
 		protected virtual void OnParseError(ParseErrorEventArgs e)
@@ -571,7 +549,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// Gets the maximum number of fields to retrieve for each record.
 		/// </summary>
 		/// <value>The maximum number of fields to retrieve for each record.</value>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		public int FieldCount
@@ -599,7 +577,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// Gets the field headers.
 		/// </summary>
 		/// <returns>The field headers or an empty array if headers are not supported.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="System.ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		public string[] GetFieldHeaders()
@@ -607,7 +585,7 @@ namespace LumenWorks.Framework.IO.Csv
 			EnsureInitialize();
 			Debug.Assert(_fieldHeaders != null, "Field headers must be non null.");
 
-			string[] fieldHeaders = new string[_fieldHeaders.Length];
+			var fieldHeaders = new string[_fieldHeaders.Length];
 
 			for (int i = 0; i < fieldHeaders.Length; i++)
 				fieldHeaders[i] = _fieldHeaders[i];
@@ -652,33 +630,33 @@ namespace LumenWorks.Framework.IO.Csv
 		#region Indexers
 
 		/// <summary>
-		/// Gets the field with the specified name and record position. <see cref="M:hasHeaders"/> must be <see langword="true"/>.
+		/// Gets the field with the specified name and record position. <see cref="_hasHeaders"/> must be <see langword="true"/>.
 		/// </summary>
 		/// <value>
 		/// The field with the specified name and record position.
 		/// </value>
-		/// <exception cref="T:ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		///		<paramref name="field"/> is <see langword="null"/> or an empty string.
 		/// </exception>
-		/// <exception cref="T:InvalidOperationException">
-		///	The CSV does not have headers (<see cref="M:HasHeaders"/> property is <see langword="false"/>).
+		/// <exception cref="InvalidOperationException">
+		///	The CSV does not have headers (<see cref="HasHeaders"/> property is <see langword="false"/>).
 		/// </exception>
-		/// <exception cref="T:ArgumentException">
+		/// <exception cref="ArgumentException">
 		///		<paramref name="field"/> not found.
 		/// </exception>
-		/// <exception cref="T:ArgumentOutOfRangeException">
+		/// <exception cref="ArgumentOutOfRangeException">
 		///		Record index must be > 0.
 		/// </exception>
-		/// <exception cref="T:InvalidOperationException">
+		/// <exception cref="InvalidOperationException">
 		///		Cannot move to a previous record in forward-only mode.
 		/// </exception>
-		/// <exception cref="T:EndOfStreamException">
+		/// <exception cref="EndOfStreamException">
 		///		Cannot read record at <paramref name="record"/>.
 		///	</exception>
-		///	<exception cref="T:MalformedCsvException">
+		///	<exception cref="MalformedCsvException">
 		///		The CSV appears to be corrupt at the current position.
 		/// </exception>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="System.ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		public string this[int record, string field]
@@ -699,22 +677,22 @@ namespace LumenWorks.Framework.IO.Csv
 		/// The field at the specified index and record position.
 		/// A <see langword="null"/> is returned if the field cannot be found for the record.
 		/// </value>
-		/// <exception cref="T:ArgumentOutOfRangeException">
-		///		<paramref name="field"/> must be included in [0, <see cref="M:FieldCount"/>[.
+		/// <exception cref="ArgumentOutOfRangeException">
+		///		<paramref name="field"/> must be included in [0, <see cref="FieldCount"/>[.
 		/// </exception>
-		/// <exception cref="T:ArgumentOutOfRangeException">
+		/// <exception cref="ArgumentOutOfRangeException">
 		///		Record index must be > 0.
 		/// </exception>
-		/// <exception cref="T:InvalidOperationException">
+		/// <exception cref="InvalidOperationException">
 		///		Cannot move to a previous record in forward-only mode.
 		/// </exception>
-		/// <exception cref="T:EndOfStreamException">
+		/// <exception cref="EndOfStreamException">
 		///		Cannot read record at <paramref name="record"/>.
 		/// </exception>
-		/// <exception cref="T:MalformedCsvException">
+		/// <exception cref="MalformedCsvException">
 		///		The CSV appears to be corrupt at the current position.
 		/// </exception>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="System.ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		public string this[int record, int field]
@@ -729,24 +707,24 @@ namespace LumenWorks.Framework.IO.Csv
 		}
 
 		/// <summary>
-		/// Gets the field with the specified name. <see cref="M:hasHeaders"/> must be <see langword="true"/>.
+		/// Gets the field with the specified name. <see cref="_hasHeaders"/> must be <see langword="true"/>.
 		/// </summary>
 		/// <value>
 		/// The field with the specified name.
 		/// </value>
-		/// <exception cref="T:ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		///		<paramref name="field"/> is <see langword="null"/> or an empty string.
 		/// </exception>
-		/// <exception cref="T:InvalidOperationException">
-		///	The CSV does not have headers (<see cref="M:HasHeaders"/> property is <see langword="false"/>).
+		/// <exception cref="InvalidOperationException">
+		///	The CSV does not have headers (<see cref="HasHeaders"/> property is <see langword="false"/>).
 		/// </exception>
-		/// <exception cref="T:ArgumentException">
+		/// <exception cref="ArgumentException">
 		///		<paramref name="field"/> not found.
 		/// </exception>
-		/// <exception cref="T:MalformedCsvException">
+		/// <exception cref="MalformedCsvException">
 		///		The CSV appears to be corrupt at the current position.
 		/// </exception>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="System.ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		public string this[string field]
@@ -772,23 +750,25 @@ namespace LumenWorks.Framework.IO.Csv
 		/// Gets the field at the specified index.
 		/// </summary>
 		/// <value>The field at the specified index.</value>
-		/// <exception cref="T:ArgumentOutOfRangeException">
-		///		<paramref name="field"/> must be included in [0, <see cref="M:FieldCount"/>[.
+		/// <exception cref="ArgumentOutOfRangeException">
+		///		<paramref name="field"/> must be included in [0, <see cref="FieldCount"/>[.
 		/// </exception>
-		/// <exception cref="T:InvalidOperationException">
+		/// <exception cref="InvalidOperationException">
 		///		No record read yet. Call ReadLine() first.
 		/// </exception>
-		/// <exception cref="T:MalformedCsvException">
+		/// <exception cref="MalformedCsvException">
 		///		The CSV appears to be corrupt at the current position.
 		/// </exception>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		public virtual string this[int field]
 		{
 			get
 			{
-				return ReadField(field, false, false);
+				if (field < 0 || field >= _fieldCount)
+					throw new ArgumentOutOfRangeException("field", field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
+				return _fields[field];
 			}
 		}
 
@@ -804,7 +784,7 @@ namespace LumenWorks.Framework.IO.Csv
 		private void EnsureInitialize()
 		{
 			if (!_initialized)
-				this.ReadNextRecord(true, false);
+				ReadNextRecord(true, false);
 
 			Debug.Assert(_fieldHeaders != null);
 			Debug.Assert(_fieldHeaders.Length > 0 || (_fieldHeaders.Length == 0 && _fieldHeaderIndexes == null));
@@ -819,7 +799,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </summary>
 		/// <param name="header">The header to look for.</param>
 		/// <returns>The field index for the provided header. -1 if not found.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		public int GetFieldIndex(string header)
@@ -841,8 +821,8 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Copies the field array of the current record to a one-dimensional array, starting at the beginning of the target array.
 		/// </summary>
-		/// <param name="array"> The one-dimensional <see cref="T:Array"/> that is the destination of the fields of the current record.</param>
-		/// <exception cref="T:ArgumentNullException">
+		/// <param name="array"> The one-dimensional <see cref="Array"/> that is the destination of the fields of the current record.</param>
+		/// <exception cref="ArgumentNullException">
 		///		<paramref name="array"/> is <see langword="null"/>.
 		/// </exception>
 		/// <exception cref="ArgumentException">
@@ -856,12 +836,12 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Copies the field array of the current record to a one-dimensional array, starting at the beginning of the target array.
 		/// </summary>
-		/// <param name="array"> The one-dimensional <see cref="T:Array"/> that is the destination of the fields of the current record.</param>
+		/// <param name="array"> The one-dimensional <see cref="Array"/> that is the destination of the fields of the current record.</param>
 		/// <param name="index">The zero-based index in <paramref name="array"/> at which copying begins.</param>
-		/// <exception cref="T:ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		///		<paramref name="array"/> is <see langword="null"/>.
 		/// </exception>
-		/// <exception cref="T:ArgumentOutOfRangeException">
+		/// <exception cref="ArgumentOutOfRangeException">
 		///		<paramref name="index"/> is les than zero or is equal to or greater than the length <paramref name="array"/>. 
 		/// </exception>
 		/// <exception cref="InvalidOperationException">
@@ -904,10 +884,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <returns>The current raw CSV data.</returns>
 		public string GetCurrentRawData()
 		{
-			if (_buffer != null && _bufferLength > 0)
-				return new string(_buffer, 0, _bufferLength);
-			else
-				return string.Empty;
+			return _line;
 		}
 
 		#endregion
@@ -943,7 +920,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </summary>
 		/// <param name="record">The record index.</param>
 		/// <returns><c>true</c> if the operation was successful; otherwise, <c>false</c>.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		public virtual bool MoveTo(long record)
@@ -952,6 +929,7 @@ namespace LumenWorks.Framework.IO.Csv
 				return false;
 
 			// Get number of record to read
+
 			long offset = record - _currentRecordIndex;
 
 			while (offset > 0)
@@ -967,495 +945,49 @@ namespace LumenWorks.Framework.IO.Csv
 
 		#endregion
 
-		#region ParseNewLine
-
-		/// <summary>
-		/// Parses a new line delimiter.
-		/// </summary>
-		/// <param name="pos">The starting position of the parsing. Will contain the resulting end position.</param>
-		/// <returns><see langword="true"/> if a new line delimiter was found; otherwise, <see langword="false"/>.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		private bool ParseNewLine(ref int pos)
-		{
-			Debug.Assert(pos <= _bufferLength);
-
-			// Check if already at the end of the buffer
-			if (pos == _bufferLength)
-			{
-				pos = 0;
-
-				if (!ReadBuffer())
-					return false;
-			}
-
-			char c = _buffer[pos];
-
-			// Treat \r as new line only if it's not the delimiter
-
-			if (c == '\r' && _delimiter != '\r')
-			{
-				pos++;
-
-				// Skip following \n (if there is one)
-
-				if (pos < _bufferLength)
-				{
-					if (_buffer[pos] == '\n')
-						pos++;
-				}
-				else
-				{
-					if (ReadBuffer())
-					{
-						if (_buffer[0] == '\n')
-							pos = 1;
-						else
-							pos = 0;
-					}
-				}
-
-				if (pos >= _bufferLength)
-				{
-					ReadBuffer();
-					pos = 0;
-				}
-
-				return true;
-			}
-			else if (c == '\n')
-			{
-				pos++;
-
-				if (pos >= _bufferLength)
-				{
-					ReadBuffer();
-					pos = 0;
-				}
-
-				return true;
-			}
-
-			return false;
-		}
-
-		/// <summary>
-		/// Determines whether the character at the specified position is a new line delimiter.
-		/// </summary>
-		/// <param name="pos">The position of the character to verify.</param>
-		/// <returns>
-		/// 	<see langword="true"/> if the character at the specified position is a new line delimiter; otherwise, <see langword="false"/>.
-		/// </returns>
-		private bool IsNewLine(int pos)
-		{
-			Debug.Assert(pos < _bufferLength);
-
-			char c = _buffer[pos];
-
-			if (c == '\n')
-				return true;
-			else if (c == '\r' && _delimiter != '\r')
-				return true;
-			else
-				return false;
-		}
 
 		#endregion
 
-		#region ReadBuffer
+		#region ReadLine
 
 		/// <summary>
 		/// Fills the buffer with data from the reader.
 		/// </summary>
 		/// <returns><see langword="true"/> if data was successfully read; otherwise, <see langword="false"/>.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
-		private bool ReadBuffer()
+		private bool ReadLine()
 		{
 			if (_eof)
 				return false;
 
 			CheckDisposed();
 
-			_bufferLength = _reader.Read(_buffer, 0, _bufferSize);
-
-			if (_bufferLength > 0)
+			if (_reader.Peek() > 0)
+			{
+				_lineNumber++;
+				_line = _reader.ReadLine();
 				return true;
+			}
 			else
 			{
 				_eof = true;
-				_buffer = null;
-
 				return false;
 			}
 		}
 
 		#endregion
 
-		#region ReadField
 
-		/// <summary>
-		/// Reads the field at the specified index.
-		/// Any unread fields with an inferior index will also be read as part of the required parsing.
-		/// </summary>
-		/// <param name="field">The field index.</param>
-		/// <param name="initializing">Indicates if the reader is currently initializing.</param>
-		/// <param name="discardValue">Indicates if the value(s) are discarded.</param>
-		/// <returns>
-		/// The field at the specified index. 
-		/// A <see langword="null"/> indicates that an error occured or that the last field has been reached during initialization.
-		/// </returns>
-		/// <exception cref="ArgumentOutOfRangeException">
-		///		<paramref name="field"/> is out of range.
-		/// </exception>
-		/// <exception cref="InvalidOperationException">
-		///		There is no current record.
-		/// </exception>
-		/// <exception cref="MissingFieldCsvException">
-		///		The CSV data appears to be missing a field.
-		/// </exception>
-		/// <exception cref="MalformedCsvException">
-		///		The CSV data appears to be malformed.
-		/// </exception>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		private string ReadField(int field, bool initializing, bool discardValue)
-		{
-			if (!initializing)
-			{
-				if (field < 0 || field >= _fieldCount)
-					throw new ArgumentOutOfRangeException("field", field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
 
-				if (_currentRecordIndex < 0)
-					throw new InvalidOperationException(ExceptionMessage.NoCurrentRecord);
-
-				// Directly return field if cached
-				if (_fields[field] != null)
-					return _fields[field];
-				else if (_missingFieldFlag)
-					return HandleMissingField(null, field, ref _nextFieldStart);
-			}
-
-			CheckDisposed();
-
-			int index = _nextFieldIndex;
-
-			while (index < field + 1)
-			{
-				// Handle case where stated start of field is past buffer
-				// This can occur because _nextFieldStart is simply 1 + last char position of previous field
-				if (_nextFieldStart == _bufferLength)
-				{
-					_nextFieldStart = 0;
-
-					// Possible EOF will be handled later (see Handle_EOF1)
-					ReadBuffer();
-				}
-
-				string value = null;
-
-				if (_missingFieldFlag)
-				{
-					value = HandleMissingField(value, index, ref _nextFieldStart);
-				}
-				else if (_nextFieldStart == _bufferLength)
-				{
-					// Handle_EOF1: Handle EOF here
-
-					// If current field is the requested field, then the value of the field is "" as in "f1,f2,f3,(\s*)"
-					// otherwise, the CSV is malformed
-
-					if (index == field)
-					{
-						if (!discardValue)
-						{
-							value = string.Empty;
-							_fields[index] = value;
-						}
-
-						_missingFieldFlag = true;
-					}
-					else
-					{
-						value = HandleMissingField(value, index, ref _nextFieldStart);
-					}
-				}
-				else
-				{
-					// Trim spaces at start
-					if ((_trimmingOptions & ValueTrimmingOptions.UnquotedOnly) != 0)
-						SkipWhiteSpaces(ref _nextFieldStart);
-
-					if (_eof)
-					{
-						value = string.Empty;
-						_fields[field] = value;
-
-						if (field < _fieldCount)
-							_missingFieldFlag = true;
-					}
-					else if (_buffer[_nextFieldStart] != _quote)
-					{
-						// Non-quoted field
-
-						int start = _nextFieldStart;
-						int pos = _nextFieldStart;
-
-						for (; ; )
-						{
-							while (pos < _bufferLength)
-							{
-								char c = _buffer[pos];
-
-								if (c == _delimiter)
-								{
-									_nextFieldStart = pos + 1;
-
-									break;
-								}
-								else if (c == '\r' || c == '\n')
-								{
-									_nextFieldStart = pos;
-									_eol = true;
-
-									break;
-								}
-								else
-									pos++;
-							}
-
-							if (pos < _bufferLength)
-								break;
-							else
-							{
-								if (!discardValue)
-									value += new string(_buffer, start, pos - start);
-
-								start = 0;
-								pos = 0;
-								_nextFieldStart = 0;
-
-								if (!ReadBuffer())
-									break;
-							}
-						}
-
-						if (!discardValue)
-						{
-							if ((_trimmingOptions & ValueTrimmingOptions.UnquotedOnly) == 0)
-							{
-								if (!_eof && pos > start)
-									value += new string(_buffer, start, pos - start);
-							}
-							else
-							{
-								if (!_eof && pos > start)
-								{
-									// Do the trimming
-									pos--;
-									while (pos > -1 && IsWhiteSpace(_buffer[pos]))
-										pos--;
-									pos++;
-
-									if (pos > 0)
-										value += new string(_buffer, start, pos - start);
-								}
-								else
-									pos = -1;
-
-								// If pos <= 0, that means the trimming went past buffer start,
-								// and the concatenated value needs to be trimmed too.
-								if (pos <= 0)
-								{
-									pos = (value == null ? -1 : value.Length - 1);
-
-									// Do the trimming
-									while (pos > -1 && IsWhiteSpace(value[pos]))
-										pos--;
-
-									pos++;
-
-									if (pos > 0 && pos != value.Length)
-										value = value.Substring(0, pos);
-								}
-							}
-
-							if (value == null)
-								value = string.Empty;
-						}
-
-						if (_eol || _eof)
-						{
-							_eol = ParseNewLine(ref _nextFieldStart);
-
-							// Reaching a new line is ok as long as the parser is initializing or it is the last field
-							if (!initializing && index != _fieldCount - 1)
-							{
-								if (value != null && value.Length == 0)
-									value = null;
-
-								value = HandleMissingField(value, index, ref _nextFieldStart);
-							}
-						}
-
-						if (!discardValue)
-							_fields[index] = value;
-					}
-					else
-					{
-						// Quoted field
-
-						// Skip quote
-						int start = _nextFieldStart + 1;
-						int pos = start;
-
-						bool quoted = true;
-						bool escaped = false;
-
-						if ((_trimmingOptions & ValueTrimmingOptions.QuotedOnly) != 0)
-						{
-							SkipWhiteSpaces(ref start);
-							pos = start;
-						}
-
-						for (; ; )
-						{
-							while (pos < _bufferLength)
-							{
-								char c = _buffer[pos];
-
-								if (escaped)
-								{
-									escaped = false;
-									start = pos;
-								}
-								// IF current char is escape AND (escape and quote are different OR next char is a quote)
-								else if (c == _escape && (_escape != _quote || (pos + 1 < _bufferLength && _buffer[pos + 1] == _quote) || (pos + 1 == _bufferLength && _reader.Peek() == _quote)))
-								{
-									if (!discardValue)
-										value += new string(_buffer, start, pos - start);
-
-									escaped = true;
-								}
-								else if (c == _quote)
-								{
-									quoted = false;
-									break;
-								}
-
-								pos++;
-							}
-
-							if (!quoted)
-								break;
-							else
-							{
-								if (!discardValue && !escaped)
-									value += new string(_buffer, start, pos - start);
-
-								start = 0;
-								pos = 0;
-								_nextFieldStart = 0;
-
-								if (!ReadBuffer())
-								{
-									HandleParseError(new MalformedCsvException(GetCurrentRawData(), _nextFieldStart, Math.Max(0, _currentRecordIndex), index), ref _nextFieldStart);
-									return null;
-								}
-							}
-						}
-
-						if (!_eof)
-						{
-							// Append remaining parsed buffer content
-							if (!discardValue && pos > start)
-								value += new string(_buffer, start, pos - start);
-
-							if (!discardValue && value != null && (_trimmingOptions & ValueTrimmingOptions.QuotedOnly) != 0)
-							{
-								int newLength = value.Length;
-								while (newLength > 0 && IsWhiteSpace(value[newLength - 1]))
-									newLength--;
-
-								if (newLength < value.Length)
-									value = value.Substring(0, newLength);
-							}
-
-							// Skip quote
-							_nextFieldStart = pos + 1;
-
-							// Skip whitespaces between the quote and the delimiter/eol
-							SkipWhiteSpaces(ref _nextFieldStart);
-
-							// Skip delimiter
-							bool delimiterSkipped;
-							if (_nextFieldStart < _bufferLength && _buffer[_nextFieldStart] == _delimiter)
-							{
-								_nextFieldStart++;
-								delimiterSkipped = true;
-							}
-							else
-							{
-								delimiterSkipped = false;
-							}
-
-							// Skip new line delimiter if initializing or last field
-							// (if the next field is missing, it will be caught when parsed)
-							if (!_eof && !delimiterSkipped && (initializing || index == _fieldCount - 1))
-								_eol = ParseNewLine(ref _nextFieldStart);
-
-							// If no delimiter is present after the quoted field and it is not the last field, then it is a parsing error
-							if (!delimiterSkipped && !_eof && !(_eol || IsNewLine(_nextFieldStart)))
-								HandleParseError(new MalformedCsvException(GetCurrentRawData(), _nextFieldStart, Math.Max(0, _currentRecordIndex), index), ref _nextFieldStart);
-						}
-
-						if (!discardValue)
-						{
-							if (value == null)
-								value = string.Empty;
-
-							_fields[index] = value;
-						}
-					}
-				}
-
-				_nextFieldIndex = Math.Max(index + 1, _nextFieldIndex);
-
-				if (index == field)
-				{
-					// If initializing, return null to signify the last field has been reached
-
-					if (initializing)
-					{
-						if (_eol || _eof)
-							return null;
-						else
-							return string.IsNullOrEmpty(value) ? string.Empty : value;
-					}
-					else
-						return value;
-				}
-
-				index++;
-			}
-
-			// Getting here is bad ...
-			HandleParseError(new MalformedCsvException(GetCurrentRawData(), _nextFieldStart, Math.Max(0, _currentRecordIndex), index), ref _nextFieldStart);
-			return null;
-		}
-
-		#endregion
 
 		#region ReadNextRecord
-
 		/// <summary>
 		/// Reads the next record.
 		/// </summary>
 		/// <returns><see langword="true"/> if a record has been successfully reads; otherwise, <see langword="false"/>.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		public bool ReadNextRecord()
@@ -1475,113 +1007,54 @@ namespace LumenWorks.Framework.IO.Csv
 		/// To be used when an error occurs.
 		/// </param>
 		/// <returns><see langword="true"/> if a record has been successfully reads; otherwise, <see langword="false"/>.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		protected virtual bool ReadNextRecord(bool onlyReadHeaders, bool skipToNextLine)
 		{
-			if (_eof)
+			if (_firstRecordInCache)
 			{
-				if (_firstRecordInCache)
-				{
-					_firstRecordInCache = false;
-					_currentRecordIndex++;
-
-					return true;
-				}
-				else
-					return false;
+				_firstRecordInCache = false;
+				_currentRecordIndex++;
+				return true;
 			}
 
-			CheckDisposed();
+			_line = null;
+
+			if (!AdvanceToNextLine()) return false;
 
 			if (!_initialized)
 			{
-				_buffer = new char[_bufferSize];
-
-				// will be replaced if and when headers are read
-				_fieldHeaders = new string[0];
-
-				if (!ReadBuffer())
-					return false;
-
-				if (!SkipEmptyAndCommentedLines(ref _nextFieldStart))
-					return false;
-
-				// Keep growing _fields array until the last field has been found
-				// and then resize it to its final correct size
-
-				_fieldCount = 0;
-				_fields = new string[16];
-
-				while (ReadField(_fieldCount, true, false) != null)
-				{
-					if (_parseErrorFlag)
-					{
-						_fieldCount = 0;
-						Array.Clear(_fields, 0, _fields.Length);
-						_parseErrorFlag = false;
-						_nextFieldIndex = 0;
-					}
-					else
-					{
-						_fieldCount++;
-
-						if (_fieldCount == _fields.Length)
-							Array.Resize<string>(ref _fields, (_fieldCount + 1) * 2);
-					}
-				}
-
-				// _fieldCount contains the last field index, but it must contains the field count,
-				// so increment by 1
-				_fieldCount++;
-
-				if (_fields.Length != _fieldCount)
-					Array.Resize<string>(ref _fields, _fieldCount);
-
-				_initialized = true;
-
-				// If headers are present, call ReadNextRecord again
 				if (_hasHeaders)
 				{
-					// Don't count first record as it was the headers
 					_currentRecordIndex = -1;
-
-					_firstRecordInCache = false;
-
-					_fieldHeaders = new string[_fieldCount];
+					_header = _line;
+					_fieldHeaders = _line.Split(SplitLineParams).ToArray();
+					_fieldCount = _fieldHeaders.Length;
 					_fieldHeaderIndexes = new Dictionary<string, int>(_fieldCount, _fieldHeaderComparer);
-
-					for (int i = 0; i < _fields.Length; i++)
+					for (int i = 0; i < _fieldHeaders.Length; i++)
 					{
-						string headerName = _fields[i];
+						string headerName = _fieldHeaders[i];
 						if (string.IsNullOrEmpty(headerName) || headerName.Trim().Length == 0)
-							headerName = this.DefaultHeaderName + i.ToString();
+						{
+							headerName = DefaultHeaderName + i.ToString();
+							_fieldHeaders[i] = headerName;
+						}
 
-						_fieldHeaders[i] = headerName;
 						_fieldHeaderIndexes.Add(headerName, i);
 					}
-
-					// Proceed to first record
 					if (!onlyReadHeaders)
 					{
-						// Calling again ReadNextRecord() seems to be simpler, 
-						// but in fact would probably cause many subtle bugs because a derived class does not expect a recursive behavior
-						// so simply do what is needed here and no more.
-
-						if (!SkipEmptyAndCommentedLines(ref _nextFieldStart))
-							return false;
-
-						Array.Clear(_fields, 0, _fields.Length);
-						_nextFieldIndex = 0;
-						_eol = false;
-
+						if (!AdvanceToNextLine()) return false;
+						_fields = _line.Split(SplitLineParams).ToArray();
 						_currentRecordIndex++;
-						return true;
 					}
 				}
 				else
 				{
+					_fieldHeaders = new string[0];
+					_fields = _line.Split(SplitLineParams).ToArray();
+					_fieldCount = _fields.Length;
 					if (onlyReadHeaders)
 					{
 						_firstRecordInCache = true;
@@ -1593,281 +1066,53 @@ namespace LumenWorks.Framework.IO.Csv
 						_currentRecordIndex = 0;
 					}
 				}
+				_initialized = true;
 			}
 			else
 			{
-				if (skipToNextLine)
-					SkipToNextLine(ref _nextFieldStart);
-				else if (_currentRecordIndex > -1 && !_missingFieldFlag)
-				{
-					// If not already at end of record, move there
-					if (!_eol && !_eof)
-					{
-						if (!_supportsMultiline)
-							SkipToNextLine(ref _nextFieldStart);
-						else
-						{
-							// a dirty trick to handle the case where extra fields are present
-							while (ReadField(_nextFieldIndex, true, true) != null)
-							{
-							}
-						}
-					}
-				}
-
-				if (!_firstRecordInCache && !SkipEmptyAndCommentedLines(ref _nextFieldStart))
-					return false;
-
-				if (_hasHeaders || !_firstRecordInCache)
-					_eol = false;
-
-				// Check to see if the first record is in cache.
-				// This can happen when initializing a reader with no headers
-				// because one record must be read to get the field count automatically
-				if (_firstRecordInCache)
-					_firstRecordInCache = false;
-				else
-				{
-					Array.Clear(_fields, 0, _fields.Length);
-					_nextFieldIndex = 0;
-				}
-
-				_missingFieldFlag = false;
-				_parseErrorFlag = false;
+				_fields = SplitCurrentLine();
 				_currentRecordIndex++;
+
 			}
+			return true;
+		}
+
+		private string[] SplitCurrentLine()
+		{
+			var fields = _line.Split(SplitLineParams);
+
+			var count = fields.Count();
+
+			if (count < _fieldCount)
+			{
+				if (MissingFieldAction == MissingFieldAction.ParseError) throw new MissingFieldCsvException(_line, 0, CurrentRecordIndex+1, fields.Count() - 1);
+				string s = MissingFieldAction == MissingFieldAction.ReplaceByEmpty ? "" : null;
+				fields = fields.Concat(Enumerable.Repeat(s, _fieldCount - count));
+			}
+
+			return fields.ToArray();
+		}
+
+		private bool AdvanceToNextLine()
+		{
+			_line = string.Empty;
+			do
+			{
+				if (!ReadLine()) return false;
+			} while ((SkipEmptyLines && (string.IsNullOrEmpty(_line)) || _line.StartsWith(new string(_comment, 1))));
 
 			return true;
 		}
 
-		#endregion
-
-		#region SkipEmptyAndCommentedLines
-
-		/// <summary>
-		/// Skips empty and commented lines.
-		/// If the end of the buffer is reached, its content be discarded and filled again from the reader.
-		/// </summary>
-		/// <param name="pos">
-		/// The position in the buffer where to start parsing. 
-		/// Will contains the resulting position after the operation.
-		/// </param>
-		/// <returns><see langword="true"/> if the end of the reader has not been reached; otherwise, <see langword="false"/>.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		private bool SkipEmptyAndCommentedLines(ref int pos)
+		private SplitLineParams SplitLineParams
 		{
-			if (pos < _bufferLength)
-				DoSkipEmptyAndCommentedLines(ref pos);
-
-			while (pos >= _bufferLength && !_eof)
-			{
-				if (ReadBuffer())
-				{
-					pos = 0;
-					DoSkipEmptyAndCommentedLines(ref pos);
-				}
-				else
-					return false;
-			}
-
-			return !_eof;
-		}
-
-		/// <summary>
-		/// <para>Worker method.</para>
-		/// <para>Skips empty and commented lines.</para>
-		/// </summary>
-		/// <param name="pos">
-		/// The position in the buffer where to start parsing. 
-		/// Will contains the resulting position after the operation.
-		/// </param>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		private void DoSkipEmptyAndCommentedLines(ref int pos)
-		{
-			while (pos < _bufferLength)
-			{
-				if (_buffer[pos] == _comment)
-				{
-					pos++;
-					SkipToNextLine(ref pos);
-				}
-				else if (_skipEmptyLines && ParseNewLine(ref pos))
-					continue;
-				else
-					break;
-			}
+			get { return new SplitLineParams(_quote, _delimiter, _trimmingOptions, _escape); }
 		}
 
 		#endregion
 
-		#region SkipWhiteSpaces
 
-		/// <summary>
-		/// Skips whitespace characters.
-		/// </summary>
-		/// <param name="pos">The starting position of the parsing. Will contain the resulting end position.</param>
-		/// <returns><see langword="true"/> if the end of the reader has not been reached; otherwise, <see langword="false"/>.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		private bool SkipWhiteSpaces(ref int pos)
-		{
-			for (; ; )
-			{
-				while (pos < _bufferLength && IsWhiteSpace(_buffer[pos]))
-					pos++;
 
-				if (pos < _bufferLength)
-					break;
-				else
-				{
-					pos = 0;
-
-					if (!ReadBuffer())
-						return false;
-				}
-			}
-
-			return true;
-		}
-
-		#endregion
-
-		#region SkipToNextLine
-
-		/// <summary>
-		/// Skips ahead to the next NewLine character.
-		/// If the end of the buffer is reached, its content be discarded and filled again from the reader.
-		/// </summary>
-		/// <param name="pos">
-		/// The position in the buffer where to start parsing. 
-		/// Will contains the resulting position after the operation.
-		/// </param>
-		/// <returns><see langword="true"/> if the end of the reader has not been reached; otherwise, <see langword="false"/>.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		private bool SkipToNextLine(ref int pos)
-		{
-			// ((pos = 0) == 0) is a little trick to reset position inline
-			while ((pos < _bufferLength || (ReadBuffer() && ((pos = 0) == 0))) && !ParseNewLine(ref pos))
-				pos++;
-
-			return !_eof;
-		}
-
-		#endregion
-
-		#region HandleParseError
-
-		/// <summary>
-		/// Handles a parsing error.
-		/// </summary>
-		/// <param name="error">The parsing error that occured.</param>
-		/// <param name="pos">The current position in the buffer.</param>
-		/// <exception cref="ArgumentNullException">
-		///	<paramref name="error"/> is <see langword="null"/>.
-		/// </exception>
-		private void HandleParseError(MalformedCsvException error, ref int pos)
-		{
-			if (error == null)
-				throw new ArgumentNullException("error");
-
-			_parseErrorFlag = true;
-
-			switch (_defaultParseErrorAction)
-			{
-				case ParseErrorAction.ThrowException:
-					throw error;
-
-				case ParseErrorAction.RaiseEvent:
-					ParseErrorEventArgs e = new ParseErrorEventArgs(error, ParseErrorAction.ThrowException);
-					OnParseError(e);
-
-					switch (e.Action)
-					{
-						case ParseErrorAction.ThrowException:
-							throw e.Error;
-
-						case ParseErrorAction.RaiseEvent:
-							throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.ParseErrorActionInvalidInsideParseErrorEvent, e.Action), e.Error);
-
-						case ParseErrorAction.AdvanceToNextLine:
-							// already at EOL when fields are missing, so don't skip to next line in that case
-							if (!_missingFieldFlag && pos >= 0)
-								SkipToNextLine(ref pos);
-							break;
-
-						default:
-							throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.ParseErrorActionNotSupported, e.Action), e.Error);
-					}
-					break;
-
-				case ParseErrorAction.AdvanceToNextLine:
-					// already at EOL when fields are missing, so don't skip to next line in that case
-					if (!_missingFieldFlag && pos >= 0)
-						SkipToNextLine(ref pos);
-					break;
-
-				default:
-					throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.ParseErrorActionNotSupported, _defaultParseErrorAction), error);
-			}
-		}
-
-		#endregion
-
-		#region HandleMissingField
-
-		/// <summary>
-		/// Handles a missing field error.
-		/// </summary>
-		/// <param name="value">The partially parsed value, if available.</param>
-		/// <param name="fieldIndex">The missing field index.</param>
-		/// <param name="currentPosition">The current position in the raw data.</param>
-		/// <returns>
-		/// The resulting value according to <see cref="M:MissingFieldAction"/>.
-		/// If the action is set to <see cref="T:MissingFieldAction.TreatAsParseError"/>,
-		/// then the parse error will be handled according to <see cref="DefaultParseErrorAction"/>.
-		/// </returns>
-		private string HandleMissingField(string value, int fieldIndex, ref int currentPosition)
-		{
-			if (fieldIndex < 0 || fieldIndex >= _fieldCount)
-				throw new ArgumentOutOfRangeException("fieldIndex", fieldIndex, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, fieldIndex));
-
-			_missingFieldFlag = true;
-
-			for (int i = fieldIndex + 1; i < _fieldCount; i++)
-				_fields[i] = null;
-
-			if (value != null)
-				return value;
-			else
-			{
-				switch (_missingFieldAction)
-				{
-					case MissingFieldAction.ParseError:
-						HandleParseError(new MissingFieldCsvException(GetCurrentRawData(), currentPosition, Math.Max(0, _currentRecordIndex), fieldIndex), ref currentPosition);
-						return value;
-
-					case MissingFieldAction.ReplaceByEmpty:
-						return string.Empty;
-
-					case MissingFieldAction.ReplaceByNull:
-						return null;
-
-					default:
-						throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.MissingFieldActionNotSupported, _missingFieldAction));
-				}
-			}
-		}
-
-		#endregion
-
-		#endregion
 
 		#region IDataReader support methods
 
@@ -1924,12 +1169,11 @@ namespace LumenWorks.Framework.IO.Csv
 			Debug.Assert(destinationArray.GetType() == typeof(char[]) || destinationArray.GetType() == typeof(byte[]));
 
 			if (destinationArray.GetType() == typeof(char[]))
-				Array.Copy(value.ToCharArray((int) fieldOffset, length), 0, destinationArray, destinationOffset, length);
+				Array.Copy(value.ToCharArray((int)fieldOffset, length), 0, destinationArray, destinationOffset, length);
 			else
 			{
-				char[] chars = value.ToCharArray((int) fieldOffset, length);
+				char[] chars = value.ToCharArray((int)fieldOffset, length);
 				byte[] source = new byte[chars.Length];
-				;
 
 				for (int i = 0; i < chars.Length; i++)
 					source[i] = Convert.ToByte(chars[i]);
@@ -2084,7 +1328,7 @@ namespace LumenWorks.Framework.IO.Csv
 
 			string value = this[i];
 
-			return Int32.Parse(value == null ? string.Empty : value, CultureInfo.CurrentCulture);
+			return Int32.Parse(value ?? string.Empty, CultureInfo.CurrentCulture);
 		}
 
 		object IDataRecord.this[string name]
@@ -2109,7 +1353,7 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
-			if (((IDataRecord) this).IsDBNull(i))
+			if (((IDataRecord)this).IsDBNull(i))
 				return DBNull.Value;
 			else
 				return this[i];
@@ -2155,7 +1399,7 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
-			IDataRecord record = (IDataRecord) this;
+			IDataRecord record = this;
 
 			for (int i = 0; i < _fieldCount; i++)
 				values[i] = record.GetValue(i);
@@ -2280,22 +1524,22 @@ namespace LumenWorks.Framework.IO.Csv
 		#region IEnumerable<string[]> Members
 
 		/// <summary>
-		/// Returns an <see cref="T:RecordEnumerator"/>  that can iterate through CSV records.
+		/// Returns an <see cref="RecordEnumerator"/>  that can iterate through CSV records.
 		/// </summary>
-		/// <returns>An <see cref="T:RecordEnumerator"/>  that can iterate through CSV records.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <returns>An <see cref="RecordEnumerator"/>  that can iterate through CSV records.</returns>
+		/// <exception cref="ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
-		public CsvReader.RecordEnumerator GetEnumerator()
+		public RecordEnumerator GetEnumerator()
 		{
-			return new CsvReader.RecordEnumerator(this);
+			return new RecordEnumerator(this);
 		}
 
 		/// <summary>
-		/// Returns an <see cref="T:System.Collections.Generics.IEnumerator"/>  that can iterate through CSV records.
+		/// Returns an <see cref="IEnumerator"/>  that can iterate through CSV records.
 		/// </summary>
-		/// <returns>An <see cref="T:System.Collections.Generics.IEnumerator"/>  that can iterate through CSV records.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <returns>An <see cref="IEnumerator"/>  that can iterate through CSV records.</returns>
+		/// <exception cref="ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		IEnumerator<string[]> IEnumerable<string[]>.GetEnumerator()
@@ -2308,10 +1552,10 @@ namespace LumenWorks.Framework.IO.Csv
 		#region IEnumerable Members
 
 		/// <summary>
-		/// Returns an <see cref="T:System.Collections.IEnumerator"/>  that can iterate through CSV records.
+		/// Returns an <see cref="System.Collections.IEnumerator"/>  that can iterate through CSV records.
 		/// </summary>
-		/// <returns>An <see cref="T:System.Collections.IEnumerator"/>  that can iterate through CSV records.</returns>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <returns>An <see cref="System.Collections.IEnumerator"/>  that can iterate through CSV records.</returns>
+		/// <exception cref="ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
 		IEnumerator IEnumerable.GetEnumerator()
@@ -2340,6 +1584,10 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </summary>
 		private readonly object _lock = new object();
 
+		private string _line;
+		private int _lineNumber;
+		private string _header;
+
 		/// <summary>
 		/// Occurs when the instance is disposed of.
 		/// </summary>
@@ -2358,9 +1606,9 @@ namespace LumenWorks.Framework.IO.Csv
 		}
 
 		/// <summary>
-		/// Raises the <see cref="M:Disposed"/> event.
+		/// Raises the <see cref="Disposed"/> event.
 		/// </summary>
-		/// <param name="e">A <see cref="T:System.EventArgs"/> that contains the event data.</param>
+		/// <param name="e">A <see cref="System.EventArgs"/> that contains the event data.</param>
 		protected virtual void OnDisposed(EventArgs e)
 		{
 			EventHandler handler = Disposed;
@@ -2370,13 +1618,13 @@ namespace LumenWorks.Framework.IO.Csv
 		}
 
 		/// <summary>
-		/// Checks if the instance has been disposed of, and if it has, throws an <see cref="T:System.ComponentModel.ObjectDisposedException"/>; otherwise, does nothing.
+		/// Checks if the instance has been disposed of, and if it has, throws an <see cref="ObjectDisposedException"/>; otherwise, does nothing.
 		/// </summary>
-		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
+		/// <exception cref="ObjectDisposedException">
 		/// 	The instance has been disposed of.
 		/// </exception>
 		/// <remarks>
-		/// 	Derived classes should call this method at the start of all methods and properties that should not be accessed after a call to <see cref="M:Dispose()"/>.
+		/// 	Derived classes should call this method at the start of all methods and properties that should not be accessed after a call to <see cref="Dispose()"/>.
 		/// </remarks>
 		protected void CheckDisposed()
 		{
@@ -2388,7 +1636,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// Releases all resources used by the instance.
 		/// </summary>
 		/// <remarks>
-		/// 	Calls <see cref="M:Dispose(Boolean)"/> with the disposing parameter set to <see langword="true"/> to free unmanaged and managed resources.
+		/// 	Calls <see cref="Dispose(Boolean)"/> with the disposing parameter set to <see langword="true"/> to free unmanaged and managed resources.
 		/// </remarks>
 		public void Dispose()
 		{
@@ -2435,7 +1683,6 @@ namespace LumenWorks.Framework.IO.Csv
 									_reader.Dispose();
 
 									_reader = null;
-									_buffer = null;
 									_eof = true;
 								}
 							}
@@ -2471,4 +1718,177 @@ namespace LumenWorks.Framework.IO.Csv
 
 		#endregion
 	}
+
+
+	public struct SplitLineParams
+	{
+		private char _quote;
+		private char _delimiter;
+		private ValueTrimmingOptions _trimmingOptions;
+		private char _escape;
+
+		public SplitLineParams(char quote, char delimiter, ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly, char escape = '"')
+		{
+			_quote = quote;
+			_delimiter = delimiter;
+			_trimmingOptions = trimmingOptions;
+			_escape = escape;
+		}
+
+		public char Quote
+		{
+			get { return _quote; }
+		}
+
+		public char Delimiter
+		{
+			get { return _delimiter; }
+		}
+
+		public ValueTrimmingOptions TrimmingOptions
+		{
+			get { return _trimmingOptions; }
+		}
+
+		public char Escape
+		{
+			get { return _escape; }
+		}
+	}
+
+
+	public static class LineSplit
+	{
+
+		public static IEnumerable<string> Split(this string line, SplitLineParams splitLineParams)
+		{
+			var whereAmI = Location.OutsideField;
+
+			var idx = 0;
+
+			var field = new StringBuilder();
+
+			Func<StringBuilder, bool, string> Yield = (builder, quoted) =>
+			{
+				var result = builder.ToString();
+				if (splitLineParams.TrimmingOptions == ValueTrimmingOptions.All
+					|| (quoted && splitLineParams.TrimmingOptions == ValueTrimmingOptions.QuotedOnly)
+					|| (!quoted && splitLineParams.TrimmingOptions == ValueTrimmingOptions.UnquotedOnly))
+					result = result.Trim();
+				return result;
+			};
+
+			Func<char?> peekNext = () =>
+			                       	{
+										if (idx+1 >= line.Length) return null;
+			                       		return line[idx + 1];
+			                       	};
+
+			var mayHaveToBeAdded = new StringBuilder();
+			bool wasQuoted = false;
+			
+			while (idx < line.Length)
+			{
+				char currentChar = line[idx];
+
+				switch (whereAmI)
+				{
+					case Location.OutsideField:
+						if (char.IsWhiteSpace(currentChar))
+						{
+							mayHaveToBeAdded.Append(currentChar);
+							break;
+						}
+						if (currentChar == splitLineParams.Quote)
+						{
+							wasQuoted = true;
+							mayHaveToBeAdded.Length = 0;
+							whereAmI = Location.InsideQuotedField;
+						}
+						else
+						{
+							field.Append(mayHaveToBeAdded);
+							mayHaveToBeAdded.Length = 0;
+							whereAmI = Location.InsideField;
+							continue;
+						}
+						break;
+					case Location.Escaped:
+						field.Append(currentChar);
+						whereAmI = Location.InsideQuotedField;
+						break;
+					case Location.InsideQuotedField:
+						if (currentChar == splitLineParams.Escape && 
+							(peekNext() == splitLineParams.Quote || peekNext() == splitLineParams.Escape))
+						{
+							whereAmI = Location.Escaped;
+							break; // skip the escape character
+						}
+						if (currentChar == splitLineParams.Quote)
+						{
+							// there are 2 possibilities: 
+							// - either the quote is just part of the field
+							//   (e.g. "foo,"bar "baz"", foobar")
+							// - or the quote is actually the end of this field
+							// => start capturing after the quote; check for delimiter 
+							whereAmI = Location.AfterSecondQuote;
+							mayHaveToBeAdded.Length = 0;
+							mayHaveToBeAdded.Append(currentChar);
+						}
+						else
+						{
+							field.Append(currentChar);
+						}
+						break;
+
+					case Location.AfterSecondQuote:
+						if (currentChar == splitLineParams.Delimiter)
+						{
+							// the second quote did mark the end of the field
+							whereAmI = Location.OutsideField;
+							mayHaveToBeAdded.Length = 0;
+							yield return Yield(field, wasQuoted);
+							field.Length = 0;
+							wasQuoted = false;
+							break;
+						}
+
+						mayHaveToBeAdded.Append(currentChar);
+
+						
+
+						if (!char.IsWhiteSpace(currentChar))
+						{
+							// the second quote did NOT mark the end of the field, so we're still 'inside' the field
+							field.Append(mayHaveToBeAdded.ToString());
+							whereAmI = Location.InsideField;
+						}
+						break;
+					case Location.InsideField:
+						if (currentChar == splitLineParams.Delimiter)
+						{
+							yield return Yield(field, wasQuoted);
+							field.Length = 0;
+							whereAmI = Location.OutsideField;
+							break;
+						}
+						field.Append(currentChar);
+						break;
+				}
+				idx++;
+			}
+
+			yield return Yield(field, wasQuoted);
+		}
+	
+	}
+	enum Location
+	{
+		InsideField,
+		InsideQuotedField,
+		AfterSecondQuote,
+		OutsideField,
+		Escaped
+	}
+
 }

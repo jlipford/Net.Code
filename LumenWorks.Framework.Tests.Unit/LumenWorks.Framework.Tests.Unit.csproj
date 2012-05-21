@@ -73,6 +73,7 @@
     <Compile Include="IO\Csv\CsvReaderMalformedTest.cs" />
     <Compile Include="IO\Csv\CsvReaderSampleData.cs" />
     <Compile Include="IO\Csv\CsvReaderTest.cs" />
+    <Compile Include="IO\Csv\LineSplitTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

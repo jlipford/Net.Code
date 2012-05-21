@@ -533,17 +533,17 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ParsingTest16()
+		public void SupportsCarriageReturnAsDelimiter()
 		{
 			const string data = "1\r2\n";
 
 			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, '\r', '"', '\"', '#', ValueTrimmingOptions.UnquotedOnly))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
-				Assert.AreEqual("1", csv[0]);
-				Assert.AreEqual("2", csv[1]);
 				Assert.AreEqual(0, csv.CurrentRecordIndex);
 				Assert.AreEqual(2, csv.FieldCount);
+				Assert.AreEqual("1", csv[0]);
+				Assert.AreEqual("2", csv[1]);
 				Assert.IsFalse(csv.ReadNextRecord());
 			}
 		}
@@ -609,7 +609,7 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ParsingTest21()
+		public void SupportsMultilineQuotedFields()
 		{
 			const string data = "\"data \r\n here\"";
 
