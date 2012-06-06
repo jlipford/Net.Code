@@ -73,15 +73,18 @@
     <Compile Include="Csv\CachedCsvReader.CsvBindingList.cs" />
     <Compile Include="Csv\CachedCsvReader.CsvPropertyDescriptor.cs" />
     <Compile Include="Csv\CachedCsvReader.CsvRecordComparer.cs" />
+    <Compile Include="Csv\BufferSplit.cs" />
     <Compile Include="Csv\CsvReader.cs" />
     <Compile Include="Csv\CsvReader.DataReaderValidations.cs" />
     <Compile Include="Csv\CsvReader.RecordEnumerator.cs" />
     <Compile Include="Csv\Events\ParseErrorEventArgs.cs" />
     <Compile Include="Csv\Exceptions\MalformedCsvException.cs" />
     <Compile Include="Csv\Exceptions\MissingFieldCsvException.cs" />
+    <Compile Include="Csv\LineSplit.cs" />
     <Compile Include="Csv\MissingFieldAction.cs" />
     <Compile Include="Csv\ParseErrorAction.cs" />
     <Compile Include="Csv\Resources\ExceptionMessage.Designer.cs" />
+    <Compile Include="Csv\CsvLayout.cs" />
     <Compile Include="Csv\ValueTrimmingOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

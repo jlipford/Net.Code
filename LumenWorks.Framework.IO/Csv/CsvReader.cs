@@ -25,7 +25,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
-using System.Text;
 using Debug = System.Diagnostics.Debug;
 using System.Globalization;
 using System.IO;
@@ -1029,7 +1028,7 @@ namespace LumenWorks.Framework.IO.Csv
 				{
 					_currentRecordIndex = -1;
 					_header = _line;
-					_fieldHeaders = _line.Split(SplitLineParams).ToArray();
+					_fieldHeaders = _line.Split(CsvLayout).ToArray();
 					_fieldCount = _fieldHeaders.Length;
 					_fieldHeaderIndexes = new Dictionary<string, int>(_fieldCount, _fieldHeaderComparer);
 					for (int i = 0; i < _fieldHeaders.Length; i++)
@@ -1046,14 +1045,14 @@ namespace LumenWorks.Framework.IO.Csv
 					if (!onlyReadHeaders)
 					{
 						if (!AdvanceToNextLine()) return false;
-						_fields = _line.Split(SplitLineParams).ToArray();
+						_fields = _line.Split(CsvLayout).ToArray();
 						_currentRecordIndex++;
 					}
 				}
 				else
 				{
 					_fieldHeaders = new string[0];
-					_fields = _line.Split(SplitLineParams).ToArray();
+					_fields = _line.Split(CsvLayout).ToArray();
 					_fieldCount = _fields.Length;
 					if (onlyReadHeaders)
 					{
@@ -1079,7 +1078,7 @@ namespace LumenWorks.Framework.IO.Csv
 
 		private string[] SplitCurrentLine()
 		{
-			var fields = _line.Split(SplitLineParams);
+			var fields = _line.Split(CsvLayout);
 
 			var count = fields.Count();
 
@@ -1104,9 +1103,9 @@ namespace LumenWorks.Framework.IO.Csv
 			return true;
 		}
 
-		private SplitLineParams SplitLineParams
+		private CsvLayout CsvLayout
 		{
-			get { return new SplitLineParams(_quote, _delimiter, _trimmingOptions, _escape); }
+			get { return new CsvLayout(_quote, _delimiter, _trimmingOptions, _escape); }
 		}
 
 		#endregion
@@ -1720,168 +1719,6 @@ namespace LumenWorks.Framework.IO.Csv
 	}
 
 
-	public struct SplitLineParams
-	{
-		private char _quote;
-		private char _delimiter;
-		private ValueTrimmingOptions _trimmingOptions;
-		private char _escape;
-
-		public SplitLineParams(char quote, char delimiter, ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly, char escape = '"')
-		{
-			_quote = quote;
-			_delimiter = delimiter;
-			_trimmingOptions = trimmingOptions;
-			_escape = escape;
-		}
-
-		public char Quote
-		{
-			get { return _quote; }
-		}
-
-		public char Delimiter
-		{
-			get { return _delimiter; }
-		}
-
-		public ValueTrimmingOptions TrimmingOptions
-		{
-			get { return _trimmingOptions; }
-		}
-
-		public char Escape
-		{
-			get { return _escape; }
-		}
-	}
-
-
-	public static class LineSplit
-	{
-
-		public static IEnumerable<string> Split(this string line, SplitLineParams splitLineParams)
-		{
-			var whereAmI = Location.OutsideField;
-
-			var idx = 0;
-
-			var field = new StringBuilder();
-
-			Func<StringBuilder, bool, string> Yield = (builder, quoted) =>
-			{
-				var result = builder.ToString();
-				if (splitLineParams.TrimmingOptions == ValueTrimmingOptions.All
-					|| (quoted && splitLineParams.TrimmingOptions == ValueTrimmingOptions.QuotedOnly)
-					|| (!quoted && splitLineParams.TrimmingOptions == ValueTrimmingOptions.UnquotedOnly))
-					result = result.Trim();
-				return result;
-			};
-
-			Func<char?> peekNext = () =>
-			                       	{
-										if (idx+1 >= line.Length) return null;
-			                       		return line[idx + 1];
-			                       	};
-
-			var mayHaveToBeAdded = new StringBuilder();
-			bool wasQuoted = false;
-			
-			while (idx < line.Length)
-			{
-				char currentChar = line[idx];
-
-				switch (whereAmI)
-				{
-					case Location.OutsideField:
-						if (char.IsWhiteSpace(currentChar))
-						{
-							mayHaveToBeAdded.Append(currentChar);
-							break;
-						}
-						if (currentChar == splitLineParams.Quote)
-						{
-							wasQuoted = true;
-							mayHaveToBeAdded.Length = 0;
-							whereAmI = Location.InsideQuotedField;
-						}
-						else
-						{
-							field.Append(mayHaveToBeAdded);
-							mayHaveToBeAdded.Length = 0;
-							whereAmI = Location.InsideField;
-							continue;
-						}
-						break;
-					case Location.Escaped:
-						field.Append(currentChar);
-						whereAmI = Location.InsideQuotedField;
-						break;
-					case Location.InsideQuotedField:
-						if (currentChar == splitLineParams.Escape && 
-							(peekNext() == splitLineParams.Quote || peekNext() == splitLineParams.Escape))
-						{
-							whereAmI = Location.Escaped;
-							break; // skip the escape character
-						}
-						if (currentChar == splitLineParams.Quote)
-						{
-							// there are 2 possibilities: 
-							// - either the quote is just part of the field
-							//   (e.g. "foo,"bar "baz"", foobar")
-							// - or the quote is actually the end of this field
-							// => start capturing after the quote; check for delimiter 
-							whereAmI = Location.AfterSecondQuote;
-							mayHaveToBeAdded.Length = 0;
-							mayHaveToBeAdded.Append(currentChar);
-						}
-						else
-						{
-							field.Append(currentChar);
-						}
-						break;
-
-					case Location.AfterSecondQuote:
-						if (currentChar == splitLineParams.Delimiter)
-						{
-							// the second quote did mark the end of the field
-							whereAmI = Location.OutsideField;
-							mayHaveToBeAdded.Length = 0;
-							yield return Yield(field, wasQuoted);
-							field.Length = 0;
-							wasQuoted = false;
-							break;
-						}
-
-						mayHaveToBeAdded.Append(currentChar);
-
-						
-
-						if (!char.IsWhiteSpace(currentChar))
-						{
-							// the second quote did NOT mark the end of the field, so we're still 'inside' the field
-							field.Append(mayHaveToBeAdded.ToString());
-							whereAmI = Location.InsideField;
-						}
-						break;
-					case Location.InsideField:
-						if (currentChar == splitLineParams.Delimiter)
-						{
-							yield return Yield(field, wasQuoted);
-							field.Length = 0;
-							whereAmI = Location.OutsideField;
-							break;
-						}
-						field.Append(currentChar);
-						break;
-				}
-				idx++;
-			}
-
-			yield return Yield(field, wasQuoted);
-		}
-	
-	}
 	enum Location
 	{
 		InsideField,

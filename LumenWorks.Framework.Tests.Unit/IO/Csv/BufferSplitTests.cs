@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 {
 	[TestFixture]
-	public class LineSplitTests
+	public class BufferSplitTests
 	{
 
 		[Test]
