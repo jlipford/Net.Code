@@ -83,6 +83,7 @@
     <Compile Include="Csv\Exceptions\MalformedCsvException.cs" />
     <Compile Include="Csv\Exceptions\MissingFieldCsvException.cs" />
     <Compile Include="Csv\LineSplit.cs" />
+    <Compile Include="Csv\Location.cs" />
     <Compile Include="Csv\MissingFieldAction.cs" />
     <Compile Include="Csv\ParseErrorAction.cs" />
     <Compile Include="Csv\Resources\ExceptionMessage.Designer.cs" />

@@ -1613,15 +1613,4 @@ namespace LumenWorks.Framework.IO.Csv
 
 		#endregion
 	}
-
-
-    enum Location
-	{
-		InsideField,
-		InsideQuotedField,
-		AfterSecondQuote,
-		OutsideField,
-		Escaped
-	}
-
 }
