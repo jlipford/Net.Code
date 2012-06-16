@@ -70,6 +70,13 @@ namespace LumenWorks.Framework.IO.Csv
 
 		#region Fields
 
+        private CsvLine _line;
+        private readonly IEnumerator<CsvLine> _enumerator;
+        private readonly CsvLayout _csvLayout;
+
+
+        public bool SupportsMultiline { get; set; }
+
 		/// <summary>
 		/// Contains the field header comparer.
 		/// </summary>
@@ -280,9 +287,6 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			_fields = new string[0];
 			_fieldHeaders = new string[0];
-#if DEBUG
-			_allocStack = new System.Diagnostics.StackTrace();
-#endif
 
 			if (reader == null)
 				throw new ArgumentNullException("reader");
@@ -740,8 +744,7 @@ namespace LumenWorks.Framework.IO.Csv
 
 			if (_fieldHeaderIndexes != null && _fieldHeaderIndexes.TryGetValue(header, out index))
 				return index;
-			else
-				return -1;
+		    return -1;
 		}
 
 		#endregion
@@ -1456,30 +1459,7 @@ namespace LumenWorks.Framework.IO.Csv
 
 		#region IDisposable members
 
-#if DEBUG
-		/// <summary>
-		/// Contains the stack when the object was allocated.
-		/// </summary>
-		private System.Diagnostics.StackTrace _allocStack;
-#endif
-
-		/// <summary>
-		/// Contains the disposed status flag.
-		/// </summary>
 		private bool _isDisposed = false;
-
-		/// <summary>
-		/// Contains the locking object for multi-threading purpose.
-		/// </summary>
-		private readonly object _lock = new object();
-
-		private CsvLine _line;
-		private int _lineNumber {get { return _parser.LineNumber; }}
-	    private readonly IEnumerator<CsvLine> _enumerator;
-	    private readonly CsvLayout _csvLayout;
-
-
-	    public bool SupportsMultiline { get; set; }
 
 	    public void Dispose()
 		{
