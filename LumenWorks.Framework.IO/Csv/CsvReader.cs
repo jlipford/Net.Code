@@ -719,12 +719,9 @@ namespace LumenWorks.Framework.IO.Csv
         private void EnsureInitialize()
         {
             if (_initialized)
-            {
                 return;
-            }
-            _line = null;
-
-            if (!AdvanceToNextLine()) return;
+            
+            if (!ReadLine()) return;
 
             if (_hasHeaders)
             {
@@ -964,26 +961,12 @@ namespace LumenWorks.Framework.IO.Csv
                 return true;
             }
 
-            _line = null;
+            if (!ReadLine()) return false;
 
-            if (!AdvanceToNextLine()) return false;
-            _fields = SplitCurrentLine();
+            _fields = _line.Fields.ToArray();
             _currentRecordIndex++;
+            
             return true;
-        }
-
-        private string[] SplitCurrentLine()
-        {
-            var fields = _line.Fields;
-
-
-            return fields.ToArray();
-        }
-
-        private bool AdvanceToNextLine()
-        {
-            _line = CsvLine.Empty;
-            return ReadLine();
         }
 
         #endregion
