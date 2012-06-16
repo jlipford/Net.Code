@@ -291,9 +291,10 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <exception cref="T:System.ComponentModel.ObjectDisposedException">
 		///	The instance has been disposed of.
 		/// </exception>
-		protected override bool ReadNextRecord(bool onlyReadHeaders, bool skipToNextLine)
+		protected override bool ReadNextRecord(bool skipToNextLine)
 		{
-			if (_currentRecordIndex < base.CurrentRecordIndex)
+
+            if (_currentRecordIndex < base.CurrentRecordIndex)
 			{
 				_currentRecordIndex++;
 				return true;
@@ -304,7 +305,7 @@ namespace LumenWorks.Framework.IO.Csv
 
 				try
 				{
-					bool canRead = base.ReadNextRecord(onlyReadHeaders, skipToNextLine);
+					bool canRead = base.ReadNextRecord(skipToNextLine);
 
 					if (canRead)
 					{
@@ -323,8 +324,7 @@ namespace LumenWorks.Framework.IO.Csv
 							MoveTo(-1);
 						}
 
-						if (!onlyReadHeaders)
-							_currentRecordIndex++;
+						_currentRecordIndex++;
 					}
 					else
 					{

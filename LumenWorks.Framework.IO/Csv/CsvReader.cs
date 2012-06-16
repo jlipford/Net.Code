@@ -932,7 +932,7 @@ namespace LumenWorks.Framework.IO.Csv
         /// </exception>
         public bool ReadNextRecord()
         {
-            return ReadNextRecord(false, false);
+            return ReadNextRecord(false);
         }
 
         /// <summary>
@@ -950,7 +950,7 @@ namespace LumenWorks.Framework.IO.Csv
         /// <exception cref="ObjectDisposedException">
         ///	The instance has been disposed of.
         /// </exception>
-        protected virtual bool ReadNextRecord(bool onlyReadHeaders, bool skipToNextLine)
+        protected virtual bool ReadNextRecord(bool skipToNextLine)
         {
             EnsureInitialize();
 
