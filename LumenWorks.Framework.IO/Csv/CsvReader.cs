@@ -127,12 +127,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </summary>
 		private MissingFieldAction _missingFieldAction;
 
-		/// <summary>
-		/// Indicates if the reader supports multiline.
-		/// </summary>
-		private bool _supportsMultiline;
-
-		/// <summary>
+	    /// <summary>
 		/// Indicates if the reader will skip empty lines.
 		/// </summary>
 		private bool _skipEmptyLines;
@@ -350,9 +345,8 @@ namespace LumenWorks.Framework.IO.Csv
 
 			_hasHeaders = hasHeaders;
 			_trimmingOptions = trimmingOptions;
-			_supportsMultiline = true;
 			_skipEmptyLines = true;
-			this.DefaultHeaderName = "Column";
+			DefaultHeaderName = "Column";
 
 			_currentRecordIndex = -1;
 			_defaultParseErrorAction = ParseErrorAction.RaiseEvent;
@@ -499,20 +493,7 @@ namespace LumenWorks.Framework.IO.Csv
 			}
 		}
 
-		/// <summary>
-		/// Gets or sets a value indicating if the reader supports multiline fields.
-		/// </summary>
-		/// <value>A value indicating if the reader supports multiline field.</value>
-		public bool SupportsMultiline
-		{
-			get { return _supportsMultiline; }
-			set
-			{
-				_supportsMultiline = value;
-			}
-		}
-
-		/// <summary>
+	    /// <summary>
 		/// Gets or sets a value indicating if the reader will skip empty lines.
 		/// </summary>
 		/// <value>A value indicating if the reader will skip empty lines.</value>
