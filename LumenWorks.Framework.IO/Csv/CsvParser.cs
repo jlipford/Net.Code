@@ -41,7 +41,8 @@ namespace LumenWorks.Framework.IO.Csv
 
                 if (count < _fieldCount)
                 {
-                    if (_missingFieldAction == MissingFieldAction.ParseError) throw new MissingFieldCsvException(readLine, 0, LineNumber - 1, fields.Count() - 1);
+                    if (_missingFieldAction == MissingFieldAction.ParseError) 
+                        throw new MissingFieldCsvException(readLine, 0, LineNumber - 1, fields.Count() - 1);
                     string s = _missingFieldAction == MissingFieldAction.ReplaceByEmpty ? "" : null;
                     fields = fields.Concat(Enumerable.Repeat(s, _fieldCount.Value - count)).ToList();
                 }

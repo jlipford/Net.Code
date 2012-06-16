@@ -87,32 +87,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </summary>
 		private int _bufferSize;
 
-		/// <summary>
-		/// Contains the comment character indicating that a line is commented out.
-		/// </summary>
-		private char _comment;
-
-		/// <summary>
-		/// Contains the escape character letting insert quotation characters inside a quoted field.
-		/// </summary>
-		private char _escape;
-
-		/// <summary>
-		/// Contains the delimiter character separating each field.
-		/// </summary>
-		private char _delimiter;
-
-		/// <summary>
-		/// Contains the quotation character wrapping every field.
-		/// </summary>
-		private char _quote;
-
-		/// <summary>
-		/// Determines which values should be trimmed.
-		/// </summary>
-		private ValueTrimmingOptions _trimmingOptions;
-
-		/// <summary>
+	    /// <summary>
 		/// Indicates if field names are located on the first non commented line.
 		/// </summary>
 		private bool _hasHeaders;
@@ -328,20 +303,15 @@ namespace LumenWorks.Framework.IO.Csv
 						_bufferSize = (int)Math.Min(bufferSize, stream.Length);
 				}
 			}
-			_delimiter = delimiter;
-			_quote = quote;
-			_escape = escape;
-			_comment = comment;
 
 			_hasHeaders = hasHeaders;
-			_trimmingOptions = trimmingOptions;
 			DefaultHeaderName = "Column";
 
 			_currentRecordIndex = -1;
 			_defaultParseErrorAction = ParseErrorAction.RaiseEvent;
 
-            var csvLayout = new CsvLayout(quote, delimiter, trimmingOptions, escape, comment);
-            _parser = new CsvParser(reader, csvLayout);
+            _csvLayout = new CsvLayout(quote, delimiter, trimmingOptions, escape, comment);
+            _parser = new CsvParser(reader, _csvLayout);
 		    _enumerator = _parser.GetEnumerator();
 		}
 
@@ -380,7 +350,7 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			get
 			{
-				return _comment;
+				return _csvLayout.Comment;
 			}
 		}
 
@@ -392,7 +362,7 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			get
 			{
-				return _escape;
+				return _csvLayout.Escape;
 			}
 		}
 
@@ -404,7 +374,7 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			get
 			{
-				return _delimiter;
+				return _csvLayout.Delimiter;
 			}
 		}
 
@@ -416,7 +386,7 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			get
 			{
-				return _quote;
+				return _csvLayout.Quote;
 			}
 		}
 
@@ -440,7 +410,7 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			get
 			{
-				return _trimmingOptions;
+				return _csvLayout.TrimmingOptions;
 			}
 		}
 
@@ -845,7 +815,7 @@ namespace LumenWorks.Framework.IO.Csv
 		private bool IsWhiteSpace(char c)
 		{
 			// Handle cases where the delimiter is a whitespace (e.g. tab)
-			if (c == _delimiter)
+			if (c == _csvLayout.Delimiter)
 				return false;
 			else
 			{
@@ -1509,6 +1479,7 @@ namespace LumenWorks.Framework.IO.Csv
 		private CsvLine _line;
 		private int _lineNumber {get { return _parser.LineNumber; }}
 	    private readonly IEnumerator<CsvLine> _enumerator;
+	    private readonly CsvLayout _csvLayout;
 
 	    /// <summary>
 		/// Occurs when the instance is disposed of.
