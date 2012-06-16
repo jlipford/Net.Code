@@ -80,7 +80,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Contains the <see cref="TextReader"/> pointing to the CSV file.
 		/// </summary>
-		private TextReader _reader;
+		private CsvParser _parser;
 
 		/// <summary>
 		/// Contains the buffer size.
@@ -343,7 +343,6 @@ namespace LumenWorks.Framework.IO.Csv
 						_bufferSize = (int)Math.Min(bufferSize, stream.Length);
 				}
 			}
-			_reader = reader;
 			_delimiter = delimiter;
 			_quote = quote;
 			_escape = escape;
@@ -357,6 +356,8 @@ namespace LumenWorks.Framework.IO.Csv
 
 			_currentRecordIndex = -1;
 			_defaultParseErrorAction = ParseErrorAction.RaiseEvent;
+            _parser = new CsvParser(reader, CsvLayout);
+		    _enumerator = _parser.GetEnumerator();
 		}
 
 		#endregion
@@ -523,13 +524,10 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <value>A value indicating if the reader will skip empty lines.</value>
 		public bool SkipEmptyLines
 		{
-			get
-			{
-				return _skipEmptyLines;
-			}
 			set
 			{
 				_skipEmptyLines = value;
+			    _parser.Layout = CsvLayout;
 			}
 		}
 
@@ -943,24 +941,17 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </exception>
 		private bool ReadLine()
 		{
-			if (_eof)
-				return false;
+            if (_eof || !_enumerator.MoveNext())
+            {
+                _eof = true;
+                return false;
+            }
 
 			CheckDisposed();
 
-			if (_reader.Peek() > 0)
-			{
-				_lineNumber++;
-				var line = new CsvParser(_reader, CsvLayout).ParsedLines().FirstOrDefault() ;
-                if (line == null) return false;
-			    _line = line;
-                return true;
-			}
-			else
-			{
-				_eof = true;
-				return false;
-			}
+
+		    _line = _enumerator.Current;
+		    return true;
 		}
 
 		#endregion
@@ -1565,9 +1556,10 @@ namespace LumenWorks.Framework.IO.Csv
 		private readonly object _lock = new object();
 
 		private CsvLine _line;
-		private int _lineNumber;
+		private int _lineNumber {get { return _parser.LineNumber; }}
+	    private readonly IEnumerator<CsvLine> _enumerator;
 
-		/// <summary>
+	    /// <summary>
 		/// Occurs when the instance is disposed of.
 		/// </summary>
 		public event EventHandler Disposed;
@@ -1653,15 +1645,15 @@ namespace LumenWorks.Framework.IO.Csv
 					{
 						// Acquire a lock on the object while disposing.
 
-						if (_reader != null)
+						if (_parser != null)
 						{
 							lock (_lock)
 							{
-								if (_reader != null)
+								if (_parser != null)
 								{
-									_reader.Dispose();
+									_parser.Dispose();
 
-									_reader = null;
+									_parser = null;
 									_eof = true;
 								}
 							}
