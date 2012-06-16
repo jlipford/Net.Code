@@ -881,9 +881,6 @@ namespace LumenWorks.Framework.IO.Csv
                 return false;
             }
 
-			CheckDisposed();
-
-
 		    _line = _enumerator.Current;
 		    return true;
 		}
@@ -1481,134 +1478,16 @@ namespace LumenWorks.Framework.IO.Csv
 	    private readonly IEnumerator<CsvLine> _enumerator;
 	    private readonly CsvLayout _csvLayout;
 
-	    /// <summary>
-		/// Occurs when the instance is disposed of.
-		/// </summary>
-		public event EventHandler Disposed;
-
-		/// <summary>
-		/// Gets a value indicating whether the instance has been disposed of.
-		/// </summary>
-		/// <value>
-		/// 	<see langword="true"/> if the instance has been disposed of; otherwise, <see langword="false"/>.
-		/// </value>
-		[System.ComponentModel.Browsable(false)]
-		public bool IsDisposed
-		{
-			get { return _isDisposed; }
-		}
 
 	    public bool SupportsMultiline { get; set; }
 
-	    /// <summary>
-		/// Raises the <see cref="Disposed"/> event.
-		/// </summary>
-		/// <param name="e">A <see cref="System.EventArgs"/> that contains the event data.</param>
-		protected virtual void OnDisposed(EventArgs e)
+	    public void Dispose()
 		{
-			EventHandler handler = Disposed;
-
-			if (handler != null)
-				handler(this, e);
-		}
-
-		/// <summary>
-		/// Checks if the instance has been disposed of, and if it has, throws an <see cref="ObjectDisposedException"/>; otherwise, does nothing.
-		/// </summary>
-		/// <exception cref="ObjectDisposedException">
-		/// 	The instance has been disposed of.
-		/// </exception>
-		/// <remarks>
-		/// 	Derived classes should call this method at the start of all methods and properties that should not be accessed after a call to <see cref="Dispose()"/>.
-		/// </remarks>
-		protected void CheckDisposed()
-		{
-			if (_isDisposed)
-				throw new ObjectDisposedException(this.GetType().FullName);
-		}
-
-		/// <summary>
-		/// Releases all resources used by the instance.
-		/// </summary>
-		/// <remarks>
-		/// 	Calls <see cref="Dispose(Boolean)"/> with the disposing parameter set to <see langword="true"/> to free unmanaged and managed resources.
-		/// </remarks>
-		public void Dispose()
-		{
-			if (!_isDisposed)
-			{
-				Dispose(true);
-				GC.SuppressFinalize(this);
-			}
-		}
-
-		/// <summary>
-		/// Releases the unmanaged resources used by this instance and optionally releases the managed resources.
-		/// </summary>
-		/// <param name="disposing">
-		/// 	<see langword="true"/> to release both managed and unmanaged resources; <see langword="false"/> to release only unmanaged resources.
-		/// </param>
-		protected virtual void Dispose(bool disposing)
-		{
-			// Refer to http://www.bluebytesoftware.com/blog/PermaLink,guid,88e62cdf-5919-4ac7-bc33-20c06ae539ae.aspx
-			// Refer to http://www.gotdotnet.com/team/libraries/whitepapers/resourcemanagement/resourcemanagement.aspx
-
-			// No exception should ever be thrown except in critical scenarios.
-			// Unhandled exceptions during finalization will tear down the process.
-			if (!_isDisposed)
-			{
-				try
-				{
-					// Dispose-time code should call Dispose() on all owned objects that implement the IDisposable interface. 
-					// "owned" means objects whose lifetime is solely controlled by the container. 
-					// In cases where ownership is not as straightforward, techniques such as HandleCollector can be used.  
-					// Large managed object fields should be nulled out.
-
-					// Dispose-time code should also set references of all owned objects to null, after disposing them. This will allow the referenced objects to be garbage collected even if not all references to the "parent" are released. It may be a significant memory consumption win if the referenced objects are large, such as big arrays, collections, etc. 
-					if (disposing)
-					{
-						// Acquire a lock on the object while disposing.
-
-						if (_parser != null)
-						{
-							lock (_lock)
-							{
-								if (_parser != null)
-								{
-									_parser.Dispose();
-
-									_parser = null;
-									_eof = true;
-								}
-							}
-						}
-					}
-				}
-				finally
-				{
-					// Ensure that the flag is set
-					_isDisposed = true;
-
-					// Catch any issues about firing an event on an already disposed object.
-					try
-					{
-						OnDisposed(EventArgs.Empty);
-					}
-					catch { }
-				}
-			}
-		}
-
-		/// <summary>
-		/// Releases unmanaged resources and performs other cleanup operations before the instance is reclaimed by garbage collection.
-		/// </summary>
-		~CsvReader()
-		{
-#if DEBUG
-			Debug.WriteLine("FinalizableObject was not disposed" + _allocStack.ToString());
-#endif
-
-			Dispose(false);
+		    if (_isDisposed) return;
+		    _parser.Dispose();
+		    _parser = null;
+		    _eof = true;
+	        _isDisposed = true;
 		}
 
 		#endregion

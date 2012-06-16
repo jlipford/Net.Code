@@ -49,7 +49,6 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 				reader.Close();
 
 				Assert.IsTrue(reader.IsClosed);
-				Assert.IsTrue(csv.IsDisposed);
 			}
 		}
 
