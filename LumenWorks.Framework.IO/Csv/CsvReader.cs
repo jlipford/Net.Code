@@ -122,16 +122,6 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </summary>
 		private ParseErrorAction _defaultParseErrorAction;
 
-		/// <summary>
-		/// Contains the action to take when a field is missing.
-		/// </summary>
-		private MissingFieldAction _missingFieldAction;
-
-	    /// <summary>
-		/// Indicates if the reader will skip empty lines.
-		/// </summary>
-		private bool _skipEmptyLines;
-
 		#endregion
 
 		#region State
@@ -345,12 +335,13 @@ namespace LumenWorks.Framework.IO.Csv
 
 			_hasHeaders = hasHeaders;
 			_trimmingOptions = trimmingOptions;
-			_skipEmptyLines = true;
 			DefaultHeaderName = "Column";
 
 			_currentRecordIndex = -1;
 			_defaultParseErrorAction = ParseErrorAction.RaiseEvent;
-            _parser = new CsvParser(reader, CsvLayout);
+
+            var csvLayout = new CsvLayout(quote, delimiter, trimmingOptions, escape, comment);
+            _parser = new CsvParser(reader, csvLayout);
 		    _enumerator = _parser.GetEnumerator();
 		}
 
@@ -488,8 +479,7 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			set
 			{
-				_missingFieldAction = value;
-			    _parser.Layout = CsvLayout;
+			    _parser.SetMissingFieldAction(value);
 			}
 		}
 
@@ -501,8 +491,7 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			set
 			{
-				_skipEmptyLines = value;
-			    _parser.Layout = CsvLayout;
+                _parser.SkipEmptyLines(value);
 			}
 		}
 
@@ -1042,11 +1031,6 @@ namespace LumenWorks.Framework.IO.Csv
 		    return ReadLine();
 		}
 
-		private CsvLayout CsvLayout
-		{
-			get { return new CsvLayout(_quote, _delimiter, _trimmingOptions, _escape, _comment, _skipEmptyLines, _missingFieldAction); }
-		}
-
 		#endregion
 
 
@@ -1543,7 +1527,9 @@ namespace LumenWorks.Framework.IO.Csv
 			get { return _isDisposed; }
 		}
 
-		/// <summary>
+	    public bool SupportsMultiline { get; set; }
+
+	    /// <summary>
 		/// Raises the <see cref="Disposed"/> event.
 		/// </summary>
 		/// <param name="e">A <see cref="System.EventArgs"/> that contains the event data.</param>

@@ -314,7 +314,7 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleTypedData1), true))
 			{
 				IDataReader reader = csv;
-
+                
 				Boolean value = true;
 				while (reader.Read())
 				{
