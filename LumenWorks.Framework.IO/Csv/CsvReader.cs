@@ -33,42 +33,42 @@ using LumenWorks.Framework.IO.Csv.Resources;
 
 namespace LumenWorks.Framework.IO.Csv
 {
-	/// <summary>
-	/// Represents a reader that provides fast, non-cached, forward-only access to CSV data.  
-	/// </summary>
-	public partial class CsvReader
-		: IDataReader, IEnumerable<string[]>
-	{
-		#region Constants
+    /// <summary>
+    /// Represents a reader that provides fast, non-cached, forward-only access to CSV data.  
+    /// </summary>
+    public partial class CsvReader
+        : IDataReader, IEnumerable<string[]>
+    {
+        #region Constants
 
-		/// <summary>
-		/// Defines the default buffer size.
-		/// </summary>
-		public const int DefaultBufferSize = 0x1000;
+        /// <summary>
+        /// Defines the default buffer size.
+        /// </summary>
+        public const int DefaultBufferSize = 0x1000;
 
-		/// <summary>
-		/// Defines the default delimiter character separating each field.
-		/// </summary>
-		public const char DefaultDelimiter = ',';
+        /// <summary>
+        /// Defines the default delimiter character separating each field.
+        /// </summary>
+        public const char DefaultDelimiter = ',';
 
-		/// <summary>
-		/// Defines the default quote character wrapping every field.
-		/// </summary>
-		public const char DefaultQuote = '"';
+        /// <summary>
+        /// Defines the default quote character wrapping every field.
+        /// </summary>
+        public const char DefaultQuote = '"';
 
-		/// <summary>
-		/// Defines the default escape character letting insert quotation characters inside a quoted field.
-		/// </summary>
-		public const char DefaultEscape = '"';
+        /// <summary>
+        /// Defines the default escape character letting insert quotation characters inside a quoted field.
+        /// </summary>
+        public const char DefaultEscape = '"';
 
-		/// <summary>
-		/// Defines the default comment character indicating that a line is commented out.
-		/// </summary>
-		public const char DefaultComment = '#';
+        /// <summary>
+        /// Defines the default comment character indicating that a line is commented out.
+        /// </summary>
+        public const char DefaultComment = '#';
 
-		#endregion
+        #endregion
 
-		#region Fields
+        #region Fields
 
         private CsvLine _line;
         private readonly IEnumerator<CsvLine> _enumerator;
@@ -77,1102 +77,1087 @@ namespace LumenWorks.Framework.IO.Csv
 
         public bool SupportsMultiline { get; set; }
 
-		/// <summary>
-		/// Contains the field header comparer.
-		/// </summary>
-		private static readonly StringComparer _fieldHeaderComparer = StringComparer.CurrentCultureIgnoreCase;
+        /// <summary>
+        /// Contains the field header comparer.
+        /// </summary>
+        private static readonly StringComparer _fieldHeaderComparer = StringComparer.CurrentCultureIgnoreCase;
 
-		#region Settings
+        #region Settings
 
-		/// <summary>
-		/// Contains the <see cref="TextReader"/> pointing to the CSV file.
-		/// </summary>
-		private CsvParser _parser;
+        /// <summary>
+        /// Contains the <see cref="TextReader"/> pointing to the CSV file.
+        /// </summary>
+        private CsvParser _parser;
 
-		/// <summary>
-		/// Contains the buffer size.
-		/// </summary>
-		private int _bufferSize;
+        /// <summary>
+        /// Contains the buffer size.
+        /// </summary>
+        private int _bufferSize;
 
-	    /// <summary>
-		/// Indicates if field names are located on the first non commented line.
-		/// </summary>
-		private bool _hasHeaders;
+        /// <summary>
+        /// Indicates if field names are located on the first non commented line.
+        /// </summary>
+        private bool _hasHeaders;
 
-		/// <summary>
-		/// Contains the default action to take when a parsing error has occured.
-		/// </summary>
-		private ParseErrorAction _defaultParseErrorAction;
+        /// <summary>
+        /// Contains the default action to take when a parsing error has occured.
+        /// </summary>
+        private ParseErrorAction _defaultParseErrorAction;
 
-		#endregion
+        #endregion
 
-		#region State
+        #region State
 
-		/// <summary>
-		/// Indicates if the class is initialized.
-		/// </summary>
-		private bool _initialized;
+        /// <summary>
+        /// Indicates if the class is initialized.
+        /// </summary>
+        private bool _initialized;
 
-		/// <summary>
-		/// Contains the field headers.
-		/// </summary>
-		private string[] _fieldHeaders;
+        /// <summary>
+        /// Contains the field headers.
+        /// </summary>
+        private string[] _fieldHeaders;
 
-		/// <summary>
-		/// Contains the dictionary of field indexes by header. The key is the field name and the value is its index.
-		/// </summary>
-		private Dictionary<string, int> _fieldHeaderIndexes;
+        /// <summary>
+        /// Contains the dictionary of field indexes by header. The key is the field name and the value is its index.
+        /// </summary>
+        private Dictionary<string, int> _fieldHeaderIndexes;
 
-		/// <summary>
-		/// Contains the current record index in the CSV file.
-		/// A value of <see cref="Int32.MinValue"/> means that the reader has not been initialized yet.
-		/// Otherwise, a negative value means that no record has been read yet.
-		/// </summary>
-		private long _currentRecordIndex;
+        /// <summary>
+        /// Contains the current record index in the CSV file.
+        /// A value of <see cref="Int32.MinValue"/> means that the reader has not been initialized yet.
+        /// Otherwise, a negative value means that no record has been read yet.
+        /// </summary>
+        private long _currentRecordIndex;
 
-		/// <summary>
-		/// Contains the array of the field values for the current record.
-		/// A null value indicates that the field have not been parsed.
-		/// </summary>
-		private string[] _fields;
+        /// <summary>
+        /// Contains the array of the field values for the current record.
+        /// A null value indicates that the field have not been parsed.
+        /// </summary>
+        private string[] _fields;
 
-		/// <summary>
-		/// Contains the maximum number of fields to retrieve for each record.
-		/// </summary>
-		private int _fieldCount;
+        /// <summary>
+        /// Contains the maximum number of fields to retrieve for each record.
+        /// </summary>
+        private int _fieldCount;
 
-		/// <summary>
-		/// Indicates if the end of the reader has been reached.
-		/// </summary>
-		private bool _eof;
+        /// <summary>
+        /// Indicates if the end of the reader has been reached.
+        /// </summary>
+        private bool _eof;
 
-		/// <summary>
-		/// Indicates if the first record is in cache.
-		/// This can happen when initializing a reader with no headers
-		/// because one record must be read to get the field count automatically
-		/// </summary>
-		private bool _firstRecordInCache;
+        /// <summary>
+        /// Indicates if the first record is in cache.
+        /// This can happen when initializing a reader with no headers
+        /// because one record must be read to get the field count automatically
+        /// </summary>
+        private bool _firstRecordInCache;
 
-		/// <summary>
-		/// Indicates if one or more field are missing for the current record.
-		/// Resets after each successful record read.
-		/// </summary>
-		private bool _missingFieldFlag;
+        /// <summary>
+        /// Indicates if one or more field are missing for the current record.
+        /// Resets after each successful record read.
+        /// </summary>
+        private bool _missingFieldFlag;
 
-		/// <summary>
-		/// Indicates if a parse error occured for the current record.
-		/// Resets after each successful record read.
-		/// </summary>
-		private bool _parseErrorFlag;
+        /// <summary>
+        /// Indicates if a parse error occured for the current record.
+        /// Resets after each successful record read.
+        /// </summary>
+        private bool _parseErrorFlag;
 
-		#endregion
+        #endregion
 
-		#endregion
+        #endregion
 
-		#region Constructors
+        #region Constructors
 
-		/// <summary>
-		/// Initializes a new instance of the CsvReader class.
-		/// </summary>
-		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
-		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
-		/// <exception cref="ArgumentNullException">
-		///		<paramref name="reader"/> is a <see langword="null"/>.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		///		Cannot read from <paramref name="reader"/>.
-		/// </exception>
-		public CsvReader(TextReader reader, bool hasHeaders)
-			: this(reader, hasHeaders, DefaultDelimiter, DefaultQuote, DefaultEscape, DefaultComment, ValueTrimmingOptions.UnquotedOnly, DefaultBufferSize)
-		{
-		}
+        /// <summary>
+        /// Initializes a new instance of the CsvReader class.
+        /// </summary>
+        /// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
+        /// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
+        /// <exception cref="ArgumentNullException">
+        ///		<paramref name="reader"/> is a <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///		Cannot read from <paramref name="reader"/>.
+        /// </exception>
+        public CsvReader(TextReader reader, bool hasHeaders)
+            : this(reader, hasHeaders, DefaultDelimiter, DefaultQuote, DefaultEscape, DefaultComment, ValueTrimmingOptions.UnquotedOnly, DefaultBufferSize)
+        {
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the CsvReader class.
-		/// </summary>
-		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
-		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
-		/// <param name="bufferSize">The buffer size in bytes.</param>
-		/// <exception cref="ArgumentNullException">
-		///		<paramref name="reader"/> is a <see langword="null"/>.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		///		Cannot read from <paramref name="reader"/>.
-		/// </exception>
-		public CsvReader(TextReader reader, bool hasHeaders, int bufferSize)
-			: this(reader, hasHeaders, DefaultDelimiter, DefaultQuote, DefaultEscape, DefaultComment, ValueTrimmingOptions.UnquotedOnly, bufferSize)
-		{
-		}
+        /// <summary>
+        /// Initializes a new instance of the CsvReader class.
+        /// </summary>
+        /// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
+        /// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
+        /// <param name="bufferSize">The buffer size in bytes.</param>
+        /// <exception cref="ArgumentNullException">
+        ///		<paramref name="reader"/> is a <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///		Cannot read from <paramref name="reader"/>.
+        /// </exception>
+        public CsvReader(TextReader reader, bool hasHeaders, int bufferSize)
+            : this(reader, hasHeaders, DefaultDelimiter, DefaultQuote, DefaultEscape, DefaultComment, ValueTrimmingOptions.UnquotedOnly, bufferSize)
+        {
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the CsvReader class.
-		/// </summary>
-		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
-		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
-		/// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
-		/// <exception cref="ArgumentNullException">
-		///		<paramref name="reader"/> is a <see langword="null"/>.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		///		Cannot read from <paramref name="reader"/>.
-		/// </exception>
-		public CsvReader(TextReader reader, bool hasHeaders, char delimiter)
-			: this(reader, hasHeaders, delimiter, DefaultQuote, DefaultEscape, DefaultComment, ValueTrimmingOptions.UnquotedOnly, DefaultBufferSize)
-		{
-		}
+        /// <summary>
+        /// Initializes a new instance of the CsvReader class.
+        /// </summary>
+        /// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
+        /// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
+        /// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
+        /// <exception cref="ArgumentNullException">
+        ///		<paramref name="reader"/> is a <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///		Cannot read from <paramref name="reader"/>.
+        /// </exception>
+        public CsvReader(TextReader reader, bool hasHeaders, char delimiter)
+            : this(reader, hasHeaders, delimiter, DefaultQuote, DefaultEscape, DefaultComment, ValueTrimmingOptions.UnquotedOnly, DefaultBufferSize)
+        {
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the CsvReader class.
-		/// </summary>
-		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
-		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
-		/// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
-		/// <param name="bufferSize">The buffer size in bytes.</param>
-		/// <exception cref="ArgumentNullException">
-		///		<paramref name="reader"/> is a <see langword="null"/>.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		///		Cannot read from <paramref name="reader"/>.
-		/// </exception>
-		public CsvReader(TextReader reader, bool hasHeaders, char delimiter, int bufferSize)
-			: this(reader, hasHeaders, delimiter, DefaultQuote, DefaultEscape, DefaultComment, ValueTrimmingOptions.UnquotedOnly, bufferSize)
-		{
-		}
+        /// <summary>
+        /// Initializes a new instance of the CsvReader class.
+        /// </summary>
+        /// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
+        /// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
+        /// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
+        /// <param name="bufferSize">The buffer size in bytes.</param>
+        /// <exception cref="ArgumentNullException">
+        ///		<paramref name="reader"/> is a <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///		Cannot read from <paramref name="reader"/>.
+        /// </exception>
+        public CsvReader(TextReader reader, bool hasHeaders, char delimiter, int bufferSize)
+            : this(reader, hasHeaders, delimiter, DefaultQuote, DefaultEscape, DefaultComment, ValueTrimmingOptions.UnquotedOnly, bufferSize)
+        {
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the CsvReader class.
-		/// </summary>
-		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
-		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
-		/// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
-		/// <param name="quote">The quotation character wrapping every field (default is ''').</param>
-		/// <param name="escape">
-		/// The escape character letting insert quotation characters inside a quoted field (default is '\').
-		/// If no escape character, set to '\0' to gain some performance.
-		/// </param>
-		/// <param name="comment">The comment character indicating that a line is commented out (default is '#').</param>
-		/// <param name="trimmingOptions">Determines which values should be trimmed.</param>
-		/// <exception cref="ArgumentNullException">
-		///		<paramref name="reader"/> is a <see langword="null"/>.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		///		Cannot read from <paramref name="reader"/>.
-		/// </exception>
-		public CsvReader(TextReader reader, bool hasHeaders, char delimiter, char quote, char escape, char comment, ValueTrimmingOptions trimmingOptions)
-			: this(reader, hasHeaders, delimiter, quote, escape, comment, trimmingOptions, DefaultBufferSize)
-		{
-		}
+        /// <summary>
+        /// Initializes a new instance of the CsvReader class.
+        /// </summary>
+        /// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
+        /// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
+        /// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
+        /// <param name="quote">The quotation character wrapping every field (default is ''').</param>
+        /// <param name="escape">
+        /// The escape character letting insert quotation characters inside a quoted field (default is '\').
+        /// If no escape character, set to '\0' to gain some performance.
+        /// </param>
+        /// <param name="comment">The comment character indicating that a line is commented out (default is '#').</param>
+        /// <param name="trimmingOptions">Determines which values should be trimmed.</param>
+        /// <exception cref="ArgumentNullException">
+        ///		<paramref name="reader"/> is a <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///		Cannot read from <paramref name="reader"/>.
+        /// </exception>
+        public CsvReader(TextReader reader, bool hasHeaders, char delimiter, char quote, char escape, char comment, ValueTrimmingOptions trimmingOptions)
+            : this(reader, hasHeaders, delimiter, quote, escape, comment, trimmingOptions, DefaultBufferSize)
+        {
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the CsvReader class.
-		/// </summary>
-		/// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
-		/// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
-		/// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
-		/// <param name="quote">The quotation character wrapping every field (default is ''').</param>
-		/// <param name="escape">
-		/// The escape character letting insert quotation characters inside a quoted field (default is '\').
-		/// If no escape character, set to '\0' to gain some performance.
-		/// </param>
-		/// <param name="comment">The comment character indicating that a line is commented out (default is '#').</param>
-		/// <param name="trimmingOptions">Determines which values should be trimmed.</param>
-		/// <param name="bufferSize">The buffer size in bytes.</param>
-		/// <exception cref="ArgumentNullException">
-		///		<paramref name="reader"/> is a <see langword="null"/>.
-		/// </exception>
-		/// <exception cref="ArgumentOutOfRangeException">
-		///		<paramref name="bufferSize"/> must be 1 or more.
-		/// </exception>
-		public CsvReader(TextReader reader, bool hasHeaders, char delimiter, char quote, char escape, char comment, ValueTrimmingOptions trimmingOptions, int bufferSize)
-		{
-			_fields = new string[0];
-			_fieldHeaders = new string[0];
+        /// <summary>
+        /// Initializes a new instance of the CsvReader class.
+        /// </summary>
+        /// <param name="reader">A <see cref="TextReader"/> pointing to the CSV file.</param>
+        /// <param name="hasHeaders"><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</param>
+        /// <param name="delimiter">The delimiter character separating each field (default is ',').</param>
+        /// <param name="quote">The quotation character wrapping every field (default is ''').</param>
+        /// <param name="escape">
+        /// The escape character letting insert quotation characters inside a quoted field (default is '\').
+        /// If no escape character, set to '\0' to gain some performance.
+        /// </param>
+        /// <param name="comment">The comment character indicating that a line is commented out (default is '#').</param>
+        /// <param name="trimmingOptions">Determines which values should be trimmed.</param>
+        /// <param name="bufferSize">The buffer size in bytes.</param>
+        /// <exception cref="ArgumentNullException">
+        ///		<paramref name="reader"/> is a <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///		<paramref name="bufferSize"/> must be 1 or more.
+        /// </exception>
+        public CsvReader(TextReader reader, bool hasHeaders, char delimiter, char quote, char escape, char comment, ValueTrimmingOptions trimmingOptions, int bufferSize)
+        {
+            _fields = new string[0];
+            _fieldHeaders = new string[0];
 
-			if (reader == null)
-				throw new ArgumentNullException("reader");
+            if (reader == null)
+                throw new ArgumentNullException("reader");
 
-			if (bufferSize <= 0)
-				throw new ArgumentOutOfRangeException("bufferSize", bufferSize, ExceptionMessage.BufferSizeTooSmall);
+            if (bufferSize <= 0)
+                throw new ArgumentOutOfRangeException("bufferSize", bufferSize, ExceptionMessage.BufferSizeTooSmall);
 
-			_bufferSize = bufferSize;
+            _bufferSize = bufferSize;
 
-			if (reader is StreamReader)
-			{
-				Stream stream = ((StreamReader)reader).BaseStream;
+            if (reader is StreamReader)
+            {
+                Stream stream = ((StreamReader)reader).BaseStream;
 
-				if (stream.CanSeek)
-				{
-					// Handle bad implementations returning 0 or less
-					if (stream.Length > 0)
-						_bufferSize = (int)Math.Min(bufferSize, stream.Length);
-				}
-			}
+                if (stream.CanSeek)
+                {
+                    // Handle bad implementations returning 0 or less
+                    if (stream.Length > 0)
+                        _bufferSize = (int)Math.Min(bufferSize, stream.Length);
+                }
+            }
 
-			_hasHeaders = hasHeaders;
-			DefaultHeaderName = "Column";
+            _hasHeaders = hasHeaders;
+            DefaultHeaderName = "Column";
 
-			_currentRecordIndex = -1;
-			_defaultParseErrorAction = ParseErrorAction.RaiseEvent;
+            _currentRecordIndex = -1;
+            _defaultParseErrorAction = ParseErrorAction.RaiseEvent;
 
             _csvLayout = new CsvLayout(quote, delimiter, trimmingOptions, escape, comment);
             _parser = new CsvParser(reader, _csvLayout);
-		    _enumerator = _parser.GetEnumerator();
-		}
+            _enumerator = _parser.GetEnumerator();
+        }
 
-		#endregion
+        #endregion
 
-		#region Events
+        #region Events
 
-		/// <summary>
-		/// Occurs when there is an error while parsing the CSV stream.
-		/// </summary>
-		public event EventHandler<ParseErrorEventArgs> ParseError;
+        /// <summary>
+        /// Occurs when there is an error while parsing the CSV stream.
+        /// </summary>
+        public event EventHandler<ParseErrorEventArgs> ParseError;
 
-		/// <summary>
-		/// Raises the <see cref="ParseError"/> event.
-		/// </summary>
-		/// <param name="e">The <see cref="ParseErrorEventArgs"/> that contains the event data.</param>
-		protected virtual void OnParseError(ParseErrorEventArgs e)
-		{
-			EventHandler<ParseErrorEventArgs> handler = ParseError;
+        /// <summary>
+        /// Raises the <see cref="ParseError"/> event.
+        /// </summary>
+        /// <param name="e">The <see cref="ParseErrorEventArgs"/> that contains the event data.</param>
+        protected virtual void OnParseError(ParseErrorEventArgs e)
+        {
+            EventHandler<ParseErrorEventArgs> handler = ParseError;
 
-			if (handler != null)
-				handler(this, e);
-		}
+            if (handler != null)
+                handler(this, e);
+        }
 
-		#endregion
+        #endregion
 
-		#region Properties
+        #region Properties
 
-		#region Settings
+        #region Settings
 
-		/// <summary>
-		/// Gets the comment character indicating that a line is commented out.
-		/// </summary>
-		/// <value>The comment character indicating that a line is commented out.</value>
-		public char Comment
-		{
-			get
-			{
-				return _csvLayout.Comment;
-			}
-		}
+        /// <summary>
+        /// Gets the comment character indicating that a line is commented out.
+        /// </summary>
+        /// <value>The comment character indicating that a line is commented out.</value>
+        public char Comment
+        {
+            get
+            {
+                return _csvLayout.Comment;
+            }
+        }
 
-		/// <summary>
-		/// Gets the escape character letting insert quotation characters inside a quoted field.
-		/// </summary>
-		/// <value>The escape character letting insert quotation characters inside a quoted field.</value>
-		public char Escape
-		{
-			get
-			{
-				return _csvLayout.Escape;
-			}
-		}
+        /// <summary>
+        /// Gets the escape character letting insert quotation characters inside a quoted field.
+        /// </summary>
+        /// <value>The escape character letting insert quotation characters inside a quoted field.</value>
+        public char Escape
+        {
+            get
+            {
+                return _csvLayout.Escape;
+            }
+        }
 
-		/// <summary>
-		/// Gets the delimiter character separating each field.
-		/// </summary>
-		/// <value>The delimiter character separating each field.</value>
-		public char Delimiter
-		{
-			get
-			{
-				return _csvLayout.Delimiter;
-			}
-		}
+        /// <summary>
+        /// Gets the delimiter character separating each field.
+        /// </summary>
+        /// <value>The delimiter character separating each field.</value>
+        public char Delimiter
+        {
+            get
+            {
+                return _csvLayout.Delimiter;
+            }
+        }
 
-		/// <summary>
-		/// Gets the quotation character wrapping every field.
-		/// </summary>
-		/// <value>The quotation character wrapping every field.</value>
-		public char Quote
-		{
-			get
-			{
-				return _csvLayout.Quote;
-			}
-		}
+        /// <summary>
+        /// Gets the quotation character wrapping every field.
+        /// </summary>
+        /// <value>The quotation character wrapping every field.</value>
+        public char Quote
+        {
+            get
+            {
+                return _csvLayout.Quote;
+            }
+        }
 
-		/// <summary>
-		/// Indicates if field names are located on the first non commented line.
-		/// </summary>
-		/// <value><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</value>
-		public bool HasHeaders
-		{
-			get
-			{
-				return _hasHeaders;
-			}
-		}
+        /// <summary>
+        /// Indicates if field names are located on the first non commented line.
+        /// </summary>
+        /// <value><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</value>
+        public bool HasHeaders
+        {
+            get
+            {
+                return _hasHeaders;
+            }
+        }
 
-		/// <summary>
-		/// Indicates if spaces at the start and end of a field are trimmed.
-		/// </summary>
-		/// <value><see langword="true"/> if spaces at the start and end of a field are trimmed, otherwise, <see langword="false"/>.</value>
-		public ValueTrimmingOptions TrimmingOption
-		{
-			get
-			{
-				return _csvLayout.TrimmingOptions;
-			}
-		}
+        /// <summary>
+        /// Indicates if spaces at the start and end of a field are trimmed.
+        /// </summary>
+        /// <value><see langword="true"/> if spaces at the start and end of a field are trimmed, otherwise, <see langword="false"/>.</value>
+        public ValueTrimmingOptions TrimmingOption
+        {
+            get
+            {
+                return _csvLayout.TrimmingOptions;
+            }
+        }
 
-		/// <summary>
-		/// Gets the buffer size.
-		/// </summary>
-		public int BufferSize
-		{
-			get
-			{
-				return _bufferSize;
-			}
-		}
+        /// <summary>
+        /// Gets the buffer size.
+        /// </summary>
+        public int BufferSize
+        {
+            get
+            {
+                return _bufferSize;
+            }
+        }
 
-		/// <summary>
-		/// Gets or sets the default action to take when a parsing error has occured.
-		/// </summary>
-		/// <value>The default action to take when a parsing error has occured.</value>
-		public ParseErrorAction DefaultParseErrorAction
-		{
-			get
-			{
-				return _defaultParseErrorAction;
-			}
-			set
-			{
-				_defaultParseErrorAction = value;
-			}
-		}
+        /// <summary>
+        /// Gets or sets the default action to take when a parsing error has occured.
+        /// </summary>
+        /// <value>The default action to take when a parsing error has occured.</value>
+        public ParseErrorAction DefaultParseErrorAction
+        {
+            get
+            {
+                return _defaultParseErrorAction;
+            }
+            set
+            {
+                _defaultParseErrorAction = value;
+            }
+        }
 
-		/// <summary>
-		/// Gets or sets the action to take when a field is missing.
-		/// </summary>
-		/// <value>The action to take when a field is missing.</value>
-		public MissingFieldAction MissingFieldAction
-		{
-			set
-			{
-			    _parser.SetMissingFieldAction(value);
-			}
-		}
+        /// <summary>
+        /// Gets or sets the action to take when a field is missing.
+        /// </summary>
+        /// <value>The action to take when a field is missing.</value>
+        public MissingFieldAction MissingFieldAction
+        {
+            set
+            {
+                _parser.SetMissingFieldAction(value);
+            }
+        }
 
-	    /// <summary>
-		/// Gets or sets a value indicating if the reader will skip empty lines.
-		/// </summary>
-		/// <value>A value indicating if the reader will skip empty lines.</value>
-		public bool SkipEmptyLines
-		{
-			set
-			{
+        /// <summary>
+        /// Gets or sets a value indicating if the reader will skip empty lines.
+        /// </summary>
+        /// <value>A value indicating if the reader will skip empty lines.</value>
+        public bool SkipEmptyLines
+        {
+            set
+            {
                 _parser.SkipEmptyLines(value);
-			}
-		}
+            }
+        }
 
-		/// <summary>
-		/// Gets or sets the default header name when it is an empty string or only whitespaces.
-		/// The header index will be appended to the specified name.
-		/// </summary>
-		/// <value>The default header name when it is an empty string or only whitespaces.</value>
-		public string DefaultHeaderName { get; set; }
+        /// <summary>
+        /// Gets or sets the default header name when it is an empty string or only whitespaces.
+        /// The header index will be appended to the specified name.
+        /// </summary>
+        /// <value>The default header name when it is an empty string or only whitespaces.</value>
+        public string DefaultHeaderName { get; set; }
 
-		#endregion
+        #endregion
 
-		#region State
+        #region State
 
-		/// <summary>
-		/// Gets the maximum number of fields to retrieve for each record.
-		/// </summary>
-		/// <value>The maximum number of fields to retrieve for each record.</value>
-		/// <exception cref="ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		public int FieldCount
-		{
-			get
-			{
-				EnsureInitialize();
-				return _fieldCount;
-			}
-		}
+        /// <summary>
+        /// Gets the maximum number of fields to retrieve for each record.
+        /// </summary>
+        /// <value>The maximum number of fields to retrieve for each record.</value>
+        /// <exception cref="ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        public int FieldCount
+        {
+            get
+            {
+                EnsureInitialize();
+                return _fieldCount;
+            }
+        }
 
-		/// <summary>
-		/// Gets a value that indicates whether the current stream position is at the end of the stream.
-		/// </summary>
-		/// <value><see langword="true"/> if the current stream position is at the end of the stream; otherwise <see langword="false"/>.</value>
-		public virtual bool EndOfStream
-		{
-			get
-			{
-				return _eof;
-			}
-		}
+        /// <summary>
+        /// Gets a value that indicates whether the current stream position is at the end of the stream.
+        /// </summary>
+        /// <value><see langword="true"/> if the current stream position is at the end of the stream; otherwise <see langword="false"/>.</value>
+        public virtual bool EndOfStream
+        {
+            get
+            {
+                return _eof;
+            }
+        }
 
-		/// <summary>
-		/// Gets the field headers.
-		/// </summary>
-		/// <returns>The field headers or an empty array if headers are not supported.</returns>
-		/// <exception cref="System.ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		public string[] GetFieldHeaders()
-		{
-			EnsureInitialize();
-			Debug.Assert(_fieldHeaders != null, "Field headers must be non null.");
+        /// <summary>
+        /// Gets the field headers.
+        /// </summary>
+        /// <returns>The field headers or an empty array if headers are not supported.</returns>
+        /// <exception cref="System.ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        public string[] GetFieldHeaders()
+        {
+            EnsureInitialize();
+            Debug.Assert(_fieldHeaders != null, "Field headers must be non null.");
 
-			var fieldHeaders = new string[_fieldHeaders.Length];
+            var fieldHeaders = new string[_fieldHeaders.Length];
 
-			for (int i = 0; i < fieldHeaders.Length; i++)
-				fieldHeaders[i] = _fieldHeaders[i];
+            for (int i = 0; i < fieldHeaders.Length; i++)
+                fieldHeaders[i] = _fieldHeaders[i];
 
-			return fieldHeaders;
-		}
+            return fieldHeaders;
+        }
 
-		/// <summary>
-		/// Gets the current record index in the CSV file.
-		/// </summary>
-		/// <value>The current record index in the CSV file.</value>
-		public virtual long CurrentRecordIndex
-		{
-			get
-			{
-				return _currentRecordIndex;
-			}
-		}
+        /// <summary>
+        /// Gets the current record index in the CSV file.
+        /// </summary>
+        /// <value>The current record index in the CSV file.</value>
+        public virtual long CurrentRecordIndex
+        {
+            get
+            {
+                return _currentRecordIndex;
+            }
+        }
 
-		/// <summary>
-		/// Indicates if one or more field are missing for the current record.
-		/// Resets after each successful record read.
-		/// </summary>
-		public bool MissingFieldFlag
-		{
-			get { return _missingFieldFlag; }
-		}
+        /// <summary>
+        /// Indicates if one or more field are missing for the current record.
+        /// Resets after each successful record read.
+        /// </summary>
+        public bool MissingFieldFlag
+        {
+            get { return _missingFieldFlag; }
+        }
 
-		/// <summary>
-		/// Indicates if a parse error occured for the current record.
-		/// Resets after each successful record read.
-		/// </summary>
-		public bool ParseErrorFlag
-		{
-			get { return _parseErrorFlag; }
-		}
+        /// <summary>
+        /// Indicates if a parse error occured for the current record.
+        /// Resets after each successful record read.
+        /// </summary>
+        public bool ParseErrorFlag
+        {
+            get { return _parseErrorFlag; }
+        }
 
-		#endregion
+        #endregion
 
-		#endregion
+        #endregion
 
-		#region Indexers
+        #region Indexers
 
-		/// <summary>
-		/// Gets the field with the specified name and record position. <see cref="_hasHeaders"/> must be <see langword="true"/>.
-		/// </summary>
-		/// <value>
-		/// The field with the specified name and record position.
-		/// </value>
-		/// <exception cref="ArgumentNullException">
-		///		<paramref name="field"/> is <see langword="null"/> or an empty string.
-		/// </exception>
-		/// <exception cref="InvalidOperationException">
-		///	The CSV does not have headers (<see cref="HasHeaders"/> property is <see langword="false"/>).
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		///		<paramref name="field"/> not found.
-		/// </exception>
-		/// <exception cref="ArgumentOutOfRangeException">
-		///		Record index must be > 0.
-		/// </exception>
-		/// <exception cref="InvalidOperationException">
-		///		Cannot move to a previous record in forward-only mode.
-		/// </exception>
-		/// <exception cref="EndOfStreamException">
-		///		Cannot read record at <paramref name="record"/>.
-		///	</exception>
-		///	<exception cref="MalformedCsvException">
-		///		The CSV appears to be corrupt at the current position.
-		/// </exception>
-		/// <exception cref="System.ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		public string this[int record, string field]
-		{
-			get
-			{
-				if (!MoveTo(record))
-					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.CannotReadRecordAtIndex, record));
+        /// <summary>
+        /// Gets the field with the specified name and record position. <see cref="_hasHeaders"/> must be <see langword="true"/>.
+        /// </summary>
+        /// <value>
+        /// The field with the specified name and record position.
+        /// </value>
+        /// <exception cref="ArgumentNullException">
+        ///		<paramref name="field"/> is <see langword="null"/> or an empty string.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///	The CSV does not have headers (<see cref="HasHeaders"/> property is <see langword="false"/>).
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///		<paramref name="field"/> not found.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///		Record index must be > 0.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///		Cannot move to a previous record in forward-only mode.
+        /// </exception>
+        /// <exception cref="EndOfStreamException">
+        ///		Cannot read record at <paramref name="record"/>.
+        ///	</exception>
+        ///	<exception cref="MalformedCsvException">
+        ///		The CSV appears to be corrupt at the current position.
+        /// </exception>
+        /// <exception cref="System.ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        public string this[int record, string field]
+        {
+            get
+            {
+                if (!MoveTo(record))
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.CannotReadRecordAtIndex, record));
 
-				return this[field];
-			}
-		}
+                return this[field];
+            }
+        }
 
-		/// <summary>
-		/// Gets the field at the specified index and record position.
-		/// </summary>
-		/// <value>
-		/// The field at the specified index and record position.
-		/// A <see langword="null"/> is returned if the field cannot be found for the record.
-		/// </value>
-		/// <exception cref="ArgumentOutOfRangeException">
-		///		<paramref name="field"/> must be included in [0, <see cref="FieldCount"/>[.
-		/// </exception>
-		/// <exception cref="ArgumentOutOfRangeException">
-		///		Record index must be > 0.
-		/// </exception>
-		/// <exception cref="InvalidOperationException">
-		///		Cannot move to a previous record in forward-only mode.
-		/// </exception>
-		/// <exception cref="EndOfStreamException">
-		///		Cannot read record at <paramref name="record"/>.
-		/// </exception>
-		/// <exception cref="MalformedCsvException">
-		///		The CSV appears to be corrupt at the current position.
-		/// </exception>
-		/// <exception cref="System.ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		public string this[int record, int field]
-		{
-			get
-			{
-				if (!MoveTo(record))
-					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.CannotReadRecordAtIndex, record));
+        /// <summary>
+        /// Gets the field at the specified index and record position.
+        /// </summary>
+        /// <value>
+        /// The field at the specified index and record position.
+        /// A <see langword="null"/> is returned if the field cannot be found for the record.
+        /// </value>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///		<paramref name="field"/> must be included in [0, <see cref="FieldCount"/>[.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///		Record index must be > 0.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///		Cannot move to a previous record in forward-only mode.
+        /// </exception>
+        /// <exception cref="EndOfStreamException">
+        ///		Cannot read record at <paramref name="record"/>.
+        /// </exception>
+        /// <exception cref="MalformedCsvException">
+        ///		The CSV appears to be corrupt at the current position.
+        /// </exception>
+        /// <exception cref="System.ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        public string this[int record, int field]
+        {
+            get
+            {
+                if (!MoveTo(record))
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.CannotReadRecordAtIndex, record));
 
-				return this[field];
-			}
-		}
+                return this[field];
+            }
+        }
 
-		/// <summary>
-		/// Gets the field with the specified name. <see cref="_hasHeaders"/> must be <see langword="true"/>.
-		/// </summary>
-		/// <value>
-		/// The field with the specified name.
-		/// </value>
-		/// <exception cref="ArgumentNullException">
-		///		<paramref name="field"/> is <see langword="null"/> or an empty string.
-		/// </exception>
-		/// <exception cref="InvalidOperationException">
-		///	The CSV does not have headers (<see cref="HasHeaders"/> property is <see langword="false"/>).
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		///		<paramref name="field"/> not found.
-		/// </exception>
-		/// <exception cref="MalformedCsvException">
-		///		The CSV appears to be corrupt at the current position.
-		/// </exception>
-		/// <exception cref="System.ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		public string this[string field]
-		{
-			get
-			{
-				if (string.IsNullOrEmpty(field))
-					throw new ArgumentNullException("field");
+        /// <summary>
+        /// Gets the field with the specified name. <see cref="_hasHeaders"/> must be <see langword="true"/>.
+        /// </summary>
+        /// <value>
+        /// The field with the specified name.
+        /// </value>
+        /// <exception cref="ArgumentNullException">
+        ///		<paramref name="field"/> is <see langword="null"/> or an empty string.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///	The CSV does not have headers (<see cref="HasHeaders"/> property is <see langword="false"/>).
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///		<paramref name="field"/> not found.
+        /// </exception>
+        /// <exception cref="MalformedCsvException">
+        ///		The CSV appears to be corrupt at the current position.
+        /// </exception>
+        /// <exception cref="System.ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        public string this[string field]
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(field))
+                    throw new ArgumentNullException("field");
 
-				if (!_hasHeaders)
-					throw new InvalidOperationException(ExceptionMessage.NoHeaders);
+                if (!_hasHeaders)
+                    throw new InvalidOperationException(ExceptionMessage.NoHeaders);
 
-				int index = GetFieldIndex(field);
+                int index = GetFieldIndex(field);
 
-				if (index < 0)
-					throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldHeaderNotFound, field), "field");
+                if (index < 0)
+                    throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldHeaderNotFound, field), "field");
 
-				return this[index];
-			}
-		}
+                return this[index];
+            }
+        }
 
-		/// <summary>
-		/// Gets the field at the specified index.
-		/// </summary>
-		/// <value>The field at the specified index.</value>
-		/// <exception cref="ArgumentOutOfRangeException">
-		///		<paramref name="field"/> must be included in [0, <see cref="FieldCount"/>[.
-		/// </exception>
-		/// <exception cref="InvalidOperationException">
-		///		No record read yet. Call ReadLine() first.
-		/// </exception>
-		/// <exception cref="MalformedCsvException">
-		///		The CSV appears to be corrupt at the current position.
-		/// </exception>
-		/// <exception cref="ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		public virtual string this[int field]
-		{
-			get
-			{
-				if (field < 0 || field >= _fieldCount)
-					throw new ArgumentOutOfRangeException("field", field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
-				return _fields[field];
-			}
-		}
+        /// <summary>
+        /// Gets the field at the specified index.
+        /// </summary>
+        /// <value>The field at the specified index.</value>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///		<paramref name="field"/> must be included in [0, <see cref="FieldCount"/>[.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///		No record read yet. Call ReadLine() first.
+        /// </exception>
+        /// <exception cref="MalformedCsvException">
+        ///		The CSV appears to be corrupt at the current position.
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        public virtual string this[int field]
+        {
+            get
+            {
+                if (field < 0 || field >= _fieldCount)
+                    throw new ArgumentOutOfRangeException("field", field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
+                return _fields[field];
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Methods
+        #region Methods
 
-		#region EnsureInitialize
+        #region EnsureInitialize
 
-		/// <summary>
-		/// Ensures that the reader is initialized.
-		/// </summary>
-		private void EnsureInitialize()
-		{
-			if (!_initialized)
-				ReadNextRecord(true, false);
+        /// <summary>
+        /// Ensures that the reader is initialized.
+        /// </summary>
+        private void EnsureInitialize()
+        {
+            if (_initialized)
+            {
+                return;
+            }
+            _line = null;
 
-			Debug.Assert(_fieldHeaders != null);
-		}
+            if (!AdvanceToNextLine()) return;
 
-		#endregion
+            if (_hasHeaders)
+            {
+                _currentRecordIndex = -1;
+                _fieldHeaders = _line.Fields;
+                _fieldCount = _fieldHeaders.Length;
+                _fieldHeaderIndexes = new Dictionary<string, int>(_fieldCount, _fieldHeaderComparer);
+                for (int i = 0; i < _fieldHeaders.Length; i++)
+                {
+                    string headerName = _fieldHeaders[i];
+                    if (string.IsNullOrEmpty(headerName) || headerName.Trim().Length == 0)
+                    {
+                        headerName = DefaultHeaderName + i.ToString();
+                        _fieldHeaders[i] = headerName;
+                    }
 
-		#region GetFieldIndex
+                    _fieldHeaderIndexes.Add(headerName, i);
+                }
+            }
+            else
+            {
+                _fieldHeaders = new string[0];
+                _fields = _line.Fields;
+                _fieldCount = _fields.Length;
+                _firstRecordInCache = true;
+                _currentRecordIndex = -1;
+            }
+            _initialized = true;
+            Debug.Assert(_fieldHeaders != null);
+        }
 
-		/// <summary>
-		/// Gets the field index for the provided header.
-		/// </summary>
-		/// <param name="header">The header to look for.</param>
-		/// <returns>The field index for the provided header. -1 if not found.</returns>
-		/// <exception cref="ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		public int GetFieldIndex(string header)
-		{
-			EnsureInitialize();
+        #endregion
 
-			int index;
+        #region GetFieldIndex
 
-			if (_fieldHeaderIndexes != null && _fieldHeaderIndexes.TryGetValue(header, out index))
-				return index;
-		    return -1;
-		}
+        /// <summary>
+        /// Gets the field index for the provided header.
+        /// </summary>
+        /// <param name="header">The header to look for.</param>
+        /// <returns>The field index for the provided header. -1 if not found.</returns>
+        /// <exception cref="ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        public int GetFieldIndex(string header)
+        {
+            EnsureInitialize();
 
-		#endregion
+            int index;
 
-		#region CopyCurrentRecordTo
+            if (_fieldHeaderIndexes != null && _fieldHeaderIndexes.TryGetValue(header, out index))
+                return index;
+            return -1;
+        }
 
-		/// <summary>
-		/// Copies the field array of the current record to a one-dimensional array, starting at the beginning of the target array.
-		/// </summary>
-		/// <param name="array"> The one-dimensional <see cref="Array"/> that is the destination of the fields of the current record.</param>
-		/// <exception cref="ArgumentNullException">
-		///		<paramref name="array"/> is <see langword="null"/>.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		///		The number of fields in the record is greater than the available space from <paramref name="index"/> to the end of <paramref name="array"/>.
-		/// </exception>
-		public void CopyCurrentRecordTo(string[] array)
-		{
-			CopyCurrentRecordTo(array, 0);
-		}
+        #endregion
 
-		/// <summary>
-		/// Copies the field array of the current record to a one-dimensional array, starting at the beginning of the target array.
-		/// </summary>
-		/// <param name="array"> The one-dimensional <see cref="Array"/> that is the destination of the fields of the current record.</param>
-		/// <param name="index">The zero-based index in <paramref name="array"/> at which copying begins.</param>
-		/// <exception cref="ArgumentNullException">
-		///		<paramref name="array"/> is <see langword="null"/>.
-		/// </exception>
-		/// <exception cref="ArgumentOutOfRangeException">
-		///		<paramref name="index"/> is les than zero or is equal to or greater than the length <paramref name="array"/>. 
-		/// </exception>
-		/// <exception cref="InvalidOperationException">
-		///	No current record.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		///		The number of fields in the record is greater than the available space from <paramref name="index"/> to the end of <paramref name="array"/>.
-		/// </exception>
-		public void CopyCurrentRecordTo(string[] array, int index)
-		{
-			if (array == null)
-				throw new ArgumentNullException("array");
+        #region CopyCurrentRecordTo
 
-			if (index < 0 || index >= array.Length)
-				throw new ArgumentOutOfRangeException("index", index, string.Empty);
+        /// <summary>
+        /// Copies the field array of the current record to a one-dimensional array, starting at the beginning of the target array.
+        /// </summary>
+        /// <param name="array"> The one-dimensional <see cref="Array"/> that is the destination of the fields of the current record.</param>
+        /// <exception cref="ArgumentNullException">
+        ///		<paramref name="array"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///		The number of fields in the record is greater than the available space from <paramref name="index"/> to the end of <paramref name="array"/>.
+        /// </exception>
+        public void CopyCurrentRecordTo(string[] array)
+        {
+            CopyCurrentRecordTo(array, 0);
+        }
 
-			if (_currentRecordIndex < 0 || !_initialized)
-				throw new InvalidOperationException(ExceptionMessage.NoCurrentRecord);
+        /// <summary>
+        /// Copies the field array of the current record to a one-dimensional array, starting at the beginning of the target array.
+        /// </summary>
+        /// <param name="array"> The one-dimensional <see cref="Array"/> that is the destination of the fields of the current record.</param>
+        /// <param name="index">The zero-based index in <paramref name="array"/> at which copying begins.</param>
+        /// <exception cref="ArgumentNullException">
+        ///		<paramref name="array"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///		<paramref name="index"/> is les than zero or is equal to or greater than the length <paramref name="array"/>. 
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///	No current record.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///		The number of fields in the record is greater than the available space from <paramref name="index"/> to the end of <paramref name="array"/>.
+        /// </exception>
+        public void CopyCurrentRecordTo(string[] array, int index)
+        {
+            if (array == null)
+                throw new ArgumentNullException("array");
 
-			if (array.Length - index < _fieldCount)
-				throw new ArgumentException(ExceptionMessage.NotEnoughSpaceInArray, "array");
+            if (index < 0 || index >= array.Length)
+                throw new ArgumentOutOfRangeException("index", index, string.Empty);
 
-			for (int i = 0; i < _fieldCount; i++)
-			{
-				if (_parseErrorFlag)
-					array[index + i] = null;
-				else
-					array[index + i] = this[i];
-			}
-		}
+            if (_currentRecordIndex < 0 || !_initialized)
+                throw new InvalidOperationException(ExceptionMessage.NoCurrentRecord);
 
-		#endregion
+            if (array.Length - index < _fieldCount)
+                throw new ArgumentException(ExceptionMessage.NotEnoughSpaceInArray, "array");
 
-		#region IsWhiteSpace
+            for (int i = 0; i < _fieldCount; i++)
+            {
+                if (_parseErrorFlag)
+                    array[index + i] = null;
+                else
+                    array[index + i] = this[i];
+            }
+        }
 
-		/// <summary>
-		/// Indicates whether the specified Unicode character is categorized as white space.
-		/// </summary>
-		/// <param name="c">A Unicode character.</param>
-		/// <returns><see langword="true"/> if <paramref name="c"/> is white space; otherwise, <see langword="false"/>.</returns>
-		private bool IsWhiteSpace(char c)
-		{
-			// Handle cases where the delimiter is a whitespace (e.g. tab)
-			if (c == _csvLayout.Delimiter)
-				return false;
-			else
-			{
-				// See char.IsLatin1(char c) in Reflector
-				if (c <= '\x00ff')
-					return (c == ' ' || c == '\t');
-				else
-					return (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.SpaceSeparator);
-			}
-		}
+        #endregion
 
-		#endregion
+        #region IsWhiteSpace
 
-		#region MoveTo
+        /// <summary>
+        /// Indicates whether the specified Unicode character is categorized as white space.
+        /// </summary>
+        /// <param name="c">A Unicode character.</param>
+        /// <returns><see langword="true"/> if <paramref name="c"/> is white space; otherwise, <see langword="false"/>.</returns>
+        private bool IsWhiteSpace(char c)
+        {
+            // Handle cases where the delimiter is a whitespace (e.g. tab)
+            if (c == _csvLayout.Delimiter)
+                return false;
+            else
+            {
+                // See char.IsLatin1(char c) in Reflector
+                if (c <= '\x00ff')
+                    return (c == ' ' || c == '\t');
+                else
+                    return (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.SpaceSeparator);
+            }
+        }
 
-		/// <summary>
-		/// Moves to the specified record index.
-		/// </summary>
-		/// <param name="record">The record index.</param>
-		/// <returns><c>true</c> if the operation was successful; otherwise, <c>false</c>.</returns>
-		/// <exception cref="ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		public virtual bool MoveTo(long record)
-		{
-			if (record < _currentRecordIndex)
-				return false;
+        #endregion
 
-			// Get number of record to read
+        #region MoveTo
 
-			long offset = record - _currentRecordIndex;
+        /// <summary>
+        /// Moves to the specified record index.
+        /// </summary>
+        /// <param name="record">The record index.</param>
+        /// <returns><c>true</c> if the operation was successful; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        public virtual bool MoveTo(long record)
+        {
+            if (record < _currentRecordIndex)
+                return false;
 
-			while (offset > 0)
-			{
-				if (!ReadNextRecord())
-					return false;
+            // Get number of record to read
 
-				offset--;
-			}
+            long offset = record - _currentRecordIndex;
 
-			return true;
-		}
+            while (offset > 0)
+            {
+                if (!ReadNextRecord())
+                    return false;
 
-		#endregion
+                offset--;
+            }
+
+            return true;
+        }
+
+        #endregion
 
 
-		#endregion
+        #endregion
 
-		#region ReadLine
+        #region ReadLine
 
-		/// <summary>
-		/// Fills the buffer with data from the reader.
-		/// </summary>
-		/// <returns><see langword="true"/> if data was successfully read; otherwise, <see langword="false"/>.</returns>
-		/// <exception cref="ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		private bool ReadLine()
-		{
+        /// <summary>
+        /// Fills the buffer with data from the reader.
+        /// </summary>
+        /// <returns><see langword="true"/> if data was successfully read; otherwise, <see langword="false"/>.</returns>
+        /// <exception cref="ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        private bool ReadLine()
+        {
             if (_eof || !_enumerator.MoveNext())
             {
                 _eof = true;
                 return false;
             }
 
-		    _line = _enumerator.Current;
-		    return true;
-		}
+            _line = _enumerator.Current;
+            return true;
+        }
 
-		#endregion
-
-
-
-
-		#region ReadNextRecord
-		/// <summary>
-		/// Reads the next record.
-		/// </summary>
-		/// <returns><see langword="true"/> if a record has been successfully reads; otherwise, <see langword="false"/>.</returns>
-		/// <exception cref="ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		public bool ReadNextRecord()
-		{
-			return ReadNextRecord(false, false);
-		}
-
-		/// <summary>
-		/// Reads the next record.
-		/// </summary>
-		/// <param name="onlyReadHeaders">
-		/// Indicates if the reader will proceed to the next record after having read headers.
-		/// <see langword="true"/> if it stops after having read headers; otherwise, <see langword="false"/>.
-		/// </param>
-		/// <param name="skipToNextLine">
-		/// Indicates if the reader will skip directly to the next line without parsing the current one. 
-		/// To be used when an error occurs.
-		/// </param>
-		/// <returns><see langword="true"/> if a record has been successfully reads; otherwise, <see langword="false"/>.</returns>
-		/// <exception cref="ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		protected virtual bool ReadNextRecord(bool onlyReadHeaders, bool skipToNextLine)
-		{
-			if (_firstRecordInCache)
-			{
-				_firstRecordInCache = false;
-				_currentRecordIndex++;
-				return true;
-			}
-
-			_line = null;
-
-			if (!AdvanceToNextLine()) return false;
-
-			if (!_initialized)
-			{
-				if (_hasHeaders)
-				{
-					_currentRecordIndex = -1;
-					_fieldHeaders = _line.Fields;
-					_fieldCount = _fieldHeaders.Length;
-					_fieldHeaderIndexes = new Dictionary<string, int>(_fieldCount, _fieldHeaderComparer);
-					for (int i = 0; i < _fieldHeaders.Length; i++)
-					{
-						string headerName = _fieldHeaders[i];
-						if (string.IsNullOrEmpty(headerName) || headerName.Trim().Length == 0)
-						{
-							headerName = DefaultHeaderName + i.ToString();
-							_fieldHeaders[i] = headerName;
-						}
-
-						_fieldHeaderIndexes.Add(headerName, i);
-					}
-					if (!onlyReadHeaders)
-					{
-						if (!AdvanceToNextLine()) return false;
-						_fields = _line.Fields;
-						_currentRecordIndex++;
-					}
-				}
-				else
-				{
-					_fieldHeaders = new string[0];
-					_fields = _line.Fields;
-					_fieldCount = _fields.Length;
-					if (onlyReadHeaders)
-					{
-						_firstRecordInCache = true;
-						_currentRecordIndex = -1;
-					}
-					else
-					{
-						_firstRecordInCache = false;
-						_currentRecordIndex = 0;
-					}
-				}
-				_initialized = true;
-			}
-			else
-			{
-				_fields = SplitCurrentLine();
-				_currentRecordIndex++;
-
-			}
-			return true;
-		}
-
-		private string[] SplitCurrentLine()
-		{
-			var fields = _line.Fields;
-
-
-			return fields.ToArray();
-		}
-
-		private bool AdvanceToNextLine()
-		{
-			_line = CsvLine.Empty;
-		    return ReadLine();
-		}
-
-		#endregion
+        #endregion
 
 
 
 
-		#region IDataReader support methods
+        #region ReadNextRecord
+        /// <summary>
+        /// Reads the next record.
+        /// </summary>
+        /// <returns><see langword="true"/> if a record has been successfully reads; otherwise, <see langword="false"/>.</returns>
+        /// <exception cref="ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        public bool ReadNextRecord()
+        {
+            return ReadNextRecord(false, false);
+        }
 
-		/// <summary>
-		/// Validates the state of the data reader.
-		/// </summary>
-		/// <param name="validations">The validations to accomplish.</param>
-		/// <exception cref="InvalidOperationException">
-		///	No current record.
-		/// </exception>
-		/// <exception cref="InvalidOperationException">
-		///	This operation is invalid when the reader is closed.
-		/// </exception>
-		private void ValidateDataReader(DataReaderValidations validations)
-		{
-			if ((validations & DataReaderValidations.IsInitialized) != 0 && !_initialized)
-				throw new InvalidOperationException(ExceptionMessage.NoCurrentRecord);
+        /// <summary>
+        /// Reads the next record.
+        /// </summary>
+        /// <param name="onlyReadHeaders">
+        /// Indicates if the reader will proceed to the next record after having read headers.
+        /// <see langword="true"/> if it stops after having read headers; otherwise, <see langword="false"/>.
+        /// </param>
+        /// <param name="skipToNextLine">
+        /// Indicates if the reader will skip directly to the next line without parsing the current one. 
+        /// To be used when an error occurs.
+        /// </param>
+        /// <returns><see langword="true"/> if a record has been successfully reads; otherwise, <see langword="false"/>.</returns>
+        /// <exception cref="ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        protected virtual bool ReadNextRecord(bool onlyReadHeaders, bool skipToNextLine)
+        {
+            EnsureInitialize();
 
-			if ((validations & DataReaderValidations.IsNotClosed) != 0 && _isDisposed)
-				throw new InvalidOperationException(ExceptionMessage.ReaderClosed);
-		}
+            if (_firstRecordInCache)
+            {
+                _firstRecordInCache = false;
+                _currentRecordIndex++;
+                return true;
+            }
 
-		/// <summary>
-		/// Copy the value of the specified field to an array.
-		/// </summary>
-		/// <param name="field">The index of the field.</param>
-		/// <param name="fieldOffset">The offset in the field value.</param>
-		/// <param name="destinationArray">The destination array where the field value will be copied.</param>
-		/// <param name="destinationOffset">The destination array offset.</param>
-		/// <param name="length">The number of characters to copy from the field value.</param>
-		/// <returns></returns>
-		private long CopyFieldToArray(int field, long fieldOffset, Array destinationArray, int destinationOffset, int length)
-		{
-			EnsureInitialize();
+            _line = null;
 
-			if (field < 0 || field >= _fieldCount)
-				throw new ArgumentOutOfRangeException("field", field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
+            if (!AdvanceToNextLine()) return false;
+            _fields = SplitCurrentLine();
+            _currentRecordIndex++;
+            return true;
+        }
 
-			if (fieldOffset < 0 || fieldOffset >= int.MaxValue)
-				throw new ArgumentOutOfRangeException("fieldOffset");
+        private string[] SplitCurrentLine()
+        {
+            var fields = _line.Fields;
 
-			// Array.Copy(...) will do the remaining argument checks
 
-			if (length == 0)
-				return 0;
+            return fields.ToArray();
+        }
 
-			string value = this[field];
+        private bool AdvanceToNextLine()
+        {
+            _line = CsvLine.Empty;
+            return ReadLine();
+        }
 
-			if (value == null)
-				value = string.Empty;
+        #endregion
 
-			Debug.Assert(fieldOffset < int.MaxValue);
 
-			Debug.Assert(destinationArray.GetType() == typeof(char[]) || destinationArray.GetType() == typeof(byte[]));
 
-			if (destinationArray.GetType() == typeof(char[]))
-				Array.Copy(value.ToCharArray((int)fieldOffset, length), 0, destinationArray, destinationOffset, length);
-			else
-			{
-				char[] chars = value.ToCharArray((int)fieldOffset, length);
-				byte[] source = new byte[chars.Length];
 
-				for (int i = 0; i < chars.Length; i++)
-					source[i] = Convert.ToByte(chars[i]);
+        #region IDataReader support methods
 
-				Array.Copy(source, 0, destinationArray, destinationOffset, length);
-			}
+        /// <summary>
+        /// Validates the state of the data reader.
+        /// </summary>
+        /// <param name="validations">The validations to accomplish.</param>
+        /// <exception cref="InvalidOperationException">
+        ///	No current record.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///	This operation is invalid when the reader is closed.
+        /// </exception>
+        private void ValidateDataReader(DataReaderValidations validations)
+        {
+            if ((validations & DataReaderValidations.IsInitialized) != 0 && !_initialized)
+                throw new InvalidOperationException(ExceptionMessage.NoCurrentRecord);
 
-			return length;
-		}
+            if ((validations & DataReaderValidations.IsNotClosed) != 0 && _isDisposed)
+                throw new InvalidOperationException(ExceptionMessage.ReaderClosed);
+        }
 
-		#endregion
+        /// <summary>
+        /// Copy the value of the specified field to an array.
+        /// </summary>
+        /// <param name="field">The index of the field.</param>
+        /// <param name="fieldOffset">The offset in the field value.</param>
+        /// <param name="destinationArray">The destination array where the field value will be copied.</param>
+        /// <param name="destinationOffset">The destination array offset.</param>
+        /// <param name="length">The number of characters to copy from the field value.</param>
+        /// <returns></returns>
+        private long CopyFieldToArray(int field, long fieldOffset, Array destinationArray, int destinationOffset, int length)
+        {
+            EnsureInitialize();
 
-		#region IDataReader Members
+            if (field < 0 || field >= _fieldCount)
+                throw new ArgumentOutOfRangeException("field", field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
 
-		int IDataReader.RecordsAffected
-		{
-			get
-			{
-				// For SELECT statements, -1 must be returned.
-				return -1;
-			}
-		}
+            if (fieldOffset < 0 || fieldOffset >= int.MaxValue)
+                throw new ArgumentOutOfRangeException("fieldOffset");
 
-		bool IDataReader.IsClosed
-		{
-			get
-			{
-				return _eof;
-			}
-		}
+            // Array.Copy(...) will do the remaining argument checks
 
-		bool IDataReader.NextResult()
-		{
-			ValidateDataReader(DataReaderValidations.IsNotClosed);
+            if (length == 0)
+                return 0;
 
-			return false;
-		}
+            string value = this[field];
 
-		void IDataReader.Close()
-		{
-			Dispose();
-		}
+            if (value == null)
+                value = string.Empty;
 
-		bool IDataReader.Read()
-		{
-			ValidateDataReader(DataReaderValidations.IsNotClosed);
+            Debug.Assert(fieldOffset < int.MaxValue);
 
-			return ReadNextRecord();
-		}
+            Debug.Assert(destinationArray.GetType() == typeof(char[]) || destinationArray.GetType() == typeof(byte[]));
 
-		int IDataReader.Depth
-		{
-			get
-			{
-				ValidateDataReader(DataReaderValidations.IsNotClosed);
+            if (destinationArray.GetType() == typeof(char[]))
+                Array.Copy(value.ToCharArray((int)fieldOffset, length), 0, destinationArray, destinationOffset, length);
+            else
+            {
+                char[] chars = value.ToCharArray((int)fieldOffset, length);
+                byte[] source = new byte[chars.Length];
 
-				return 0;
-			}
-		}
+                for (int i = 0; i < chars.Length; i++)
+                    source[i] = Convert.ToByte(chars[i]);
 
-		DataTable IDataReader.GetSchemaTable()
-		{
-			EnsureInitialize();
-			ValidateDataReader(DataReaderValidations.IsNotClosed);
+                Array.Copy(source, 0, destinationArray, destinationOffset, length);
+            }
 
-			DataTable schema = new DataTable("SchemaTable");
-			schema.Locale = CultureInfo.InvariantCulture;
-			schema.MinimumCapacity = _fieldCount;
+            return length;
+        }
 
-			schema.Columns.Add(SchemaTableColumn.AllowDBNull, typeof(bool)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.BaseColumnName, typeof(string)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.BaseSchemaName, typeof(string)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.BaseTableName, typeof(string)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.ColumnName, typeof(string)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.ColumnOrdinal, typeof(int)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.ColumnSize, typeof(int)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.DataType, typeof(object)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.IsAliased, typeof(bool)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.IsExpression, typeof(bool)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.IsKey, typeof(bool)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.IsLong, typeof(bool)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.IsUnique, typeof(bool)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.NumericPrecision, typeof(short)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.NumericScale, typeof(short)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableColumn.ProviderType, typeof(int)).ReadOnly = true;
+        #endregion
 
-			schema.Columns.Add(SchemaTableOptionalColumn.BaseCatalogName, typeof(string)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableOptionalColumn.BaseServerName, typeof(string)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableOptionalColumn.IsAutoIncrement, typeof(bool)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableOptionalColumn.IsHidden, typeof(bool)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableOptionalColumn.IsReadOnly, typeof(bool)).ReadOnly = true;
-			schema.Columns.Add(SchemaTableOptionalColumn.IsRowVersion, typeof(bool)).ReadOnly = true;
+        #region IDataReader Members
 
-			string[] columnNames;
+        int IDataReader.RecordsAffected
+        {
+            get
+            {
+                // For SELECT statements, -1 must be returned.
+                return -1;
+            }
+        }
 
-			if (_hasHeaders)
-				columnNames = _fieldHeaders;
-			else
-			{
-				columnNames = new string[_fieldCount];
+        bool IDataReader.IsClosed
+        {
+            get
+            {
+                return _eof;
+            }
+        }
 
-				for (int i = 0; i < _fieldCount; i++)
-					columnNames[i] = "Column" + i.ToString(CultureInfo.InvariantCulture);
-			}
+        bool IDataReader.NextResult()
+        {
+            ValidateDataReader(DataReaderValidations.IsNotClosed);
 
-			// null marks columns that will change for each row
-			object[] schemaRow = new object[] { 
+            return false;
+        }
+
+        void IDataReader.Close()
+        {
+            Dispose();
+        }
+
+        bool IDataReader.Read()
+        {
+            ValidateDataReader(DataReaderValidations.IsNotClosed);
+
+            return ReadNextRecord();
+        }
+
+        int IDataReader.Depth
+        {
+            get
+            {
+                ValidateDataReader(DataReaderValidations.IsNotClosed);
+
+                return 0;
+            }
+        }
+
+        DataTable IDataReader.GetSchemaTable()
+        {
+            EnsureInitialize();
+            ValidateDataReader(DataReaderValidations.IsNotClosed);
+
+            DataTable schema = new DataTable("SchemaTable");
+            schema.Locale = CultureInfo.InvariantCulture;
+            schema.MinimumCapacity = _fieldCount;
+
+            schema.Columns.Add(SchemaTableColumn.AllowDBNull, typeof(bool)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.BaseColumnName, typeof(string)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.BaseSchemaName, typeof(string)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.BaseTableName, typeof(string)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.ColumnName, typeof(string)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.ColumnOrdinal, typeof(int)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.ColumnSize, typeof(int)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.DataType, typeof(object)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.IsAliased, typeof(bool)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.IsExpression, typeof(bool)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.IsKey, typeof(bool)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.IsLong, typeof(bool)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.IsUnique, typeof(bool)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.NumericPrecision, typeof(short)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.NumericScale, typeof(short)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableColumn.ProviderType, typeof(int)).ReadOnly = true;
+
+            schema.Columns.Add(SchemaTableOptionalColumn.BaseCatalogName, typeof(string)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableOptionalColumn.BaseServerName, typeof(string)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableOptionalColumn.IsAutoIncrement, typeof(bool)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableOptionalColumn.IsHidden, typeof(bool)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableOptionalColumn.IsReadOnly, typeof(bool)).ReadOnly = true;
+            schema.Columns.Add(SchemaTableOptionalColumn.IsRowVersion, typeof(bool)).ReadOnly = true;
+
+            string[] columnNames;
+
+            if (_hasHeaders)
+                columnNames = _fieldHeaders;
+            else
+            {
+                columnNames = new string[_fieldCount];
+
+                for (int i = 0; i < _fieldCount; i++)
+                    columnNames[i] = "Column" + i.ToString(CultureInfo.InvariantCulture);
+            }
+
+            // null marks columns that will change for each row
+            object[] schemaRow = new object[] { 
 					true,					// 00- AllowDBNull
 					null,					// 01- BaseColumnName
 					string.Empty,			// 02- BaseSchemaName
@@ -1198,278 +1183,278 @@ namespace LumenWorks.Framework.IO.Csv
 					false					// 21- IsRowVersion
 			  };
 
-			for (int i = 0; i < columnNames.Length; i++)
-			{
-				schemaRow[1] = columnNames[i]; // Base column name
-				schemaRow[4] = columnNames[i]; // Column name
-				schemaRow[5] = i; // Column ordinal
+            for (int i = 0; i < columnNames.Length; i++)
+            {
+                schemaRow[1] = columnNames[i]; // Base column name
+                schemaRow[4] = columnNames[i]; // Column name
+                schemaRow[5] = i; // Column ordinal
 
-				schema.Rows.Add(schemaRow);
-			}
+                schema.Rows.Add(schemaRow);
+            }
 
-			return schema;
-		}
+            return schema;
+        }
 
-		#endregion
+        #endregion
 
-		#region IDataRecord Members
+        #region IDataRecord Members
 
-		int IDataRecord.GetInt32(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+        int IDataRecord.GetInt32(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
-			string value = this[i];
+            string value = this[i];
 
-			return Int32.Parse(value ?? string.Empty, CultureInfo.CurrentCulture);
-		}
+            return Int32.Parse(value ?? string.Empty, CultureInfo.CurrentCulture);
+        }
 
-		object IDataRecord.this[string name]
-		{
-			get
-			{
-				ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-				return this[name];
-			}
-		}
+        object IDataRecord.this[string name]
+        {
+            get
+            {
+                ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+                return this[name];
+            }
+        }
 
-		object IDataRecord.this[int i]
-		{
-			get
-			{
-				ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-				return this[i];
-			}
-		}
+        object IDataRecord.this[int i]
+        {
+            get
+            {
+                ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+                return this[i];
+            }
+        }
 
-		object IDataRecord.GetValue(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+        object IDataRecord.GetValue(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
-			if (((IDataRecord)this).IsDBNull(i))
-				return DBNull.Value;
-			else
-				return this[i];
-		}
+            if (((IDataRecord)this).IsDBNull(i))
+                return DBNull.Value;
+            else
+                return this[i];
+        }
 
-		bool IDataRecord.IsDBNull(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return (string.IsNullOrEmpty(this[i]));
-		}
+        bool IDataRecord.IsDBNull(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return (string.IsNullOrEmpty(this[i]));
+        }
 
-		long IDataRecord.GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+        long IDataRecord.GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
-			return CopyFieldToArray(i, fieldOffset, buffer, bufferoffset, length);
-		}
+            return CopyFieldToArray(i, fieldOffset, buffer, bufferoffset, length);
+        }
 
-		byte IDataRecord.GetByte(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return Byte.Parse(this[i], CultureInfo.CurrentCulture);
-		}
+        byte IDataRecord.GetByte(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return Byte.Parse(this[i], CultureInfo.CurrentCulture);
+        }
 
-		Type IDataRecord.GetFieldType(int i)
-		{
-			EnsureInitialize();
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+        Type IDataRecord.GetFieldType(int i)
+        {
+            EnsureInitialize();
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
-			if (i < 0 || i >= _fieldCount)
-				throw new ArgumentOutOfRangeException("i", i, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, i));
+            if (i < 0 || i >= _fieldCount)
+                throw new ArgumentOutOfRangeException("i", i, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, i));
 
-			return typeof(string);
-		}
+            return typeof(string);
+        }
 
-		decimal IDataRecord.GetDecimal(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return Decimal.Parse(this[i], CultureInfo.CurrentCulture);
-		}
+        decimal IDataRecord.GetDecimal(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return Decimal.Parse(this[i], CultureInfo.CurrentCulture);
+        }
 
-		int IDataRecord.GetValues(object[] values)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+        int IDataRecord.GetValues(object[] values)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
-			IDataRecord record = this;
+            IDataRecord record = this;
 
-			for (int i = 0; i < _fieldCount; i++)
-				values[i] = record.GetValue(i);
+            for (int i = 0; i < _fieldCount; i++)
+                values[i] = record.GetValue(i);
 
-			return _fieldCount;
-		}
+            return _fieldCount;
+        }
 
-		string IDataRecord.GetName(int i)
-		{
-			EnsureInitialize();
-			ValidateDataReader(DataReaderValidations.IsNotClosed);
+        string IDataRecord.GetName(int i)
+        {
+            EnsureInitialize();
+            ValidateDataReader(DataReaderValidations.IsNotClosed);
 
-			if (i < 0 || i >= _fieldCount)
-				throw new ArgumentOutOfRangeException("i", i, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, i));
+            if (i < 0 || i >= _fieldCount)
+                throw new ArgumentOutOfRangeException("i", i, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, i));
 
-			if (_hasHeaders)
-				return _fieldHeaders[i];
-			else
-				return "Column" + i.ToString(CultureInfo.InvariantCulture);
-		}
+            if (_hasHeaders)
+                return _fieldHeaders[i];
+            else
+                return "Column" + i.ToString(CultureInfo.InvariantCulture);
+        }
 
-		long IDataRecord.GetInt64(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return Int64.Parse(this[i], CultureInfo.CurrentCulture);
-		}
+        long IDataRecord.GetInt64(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return Int64.Parse(this[i], CultureInfo.CurrentCulture);
+        }
 
-		double IDataRecord.GetDouble(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return Double.Parse(this[i], CultureInfo.CurrentCulture);
-		}
+        double IDataRecord.GetDouble(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return Double.Parse(this[i], CultureInfo.CurrentCulture);
+        }
 
-		bool IDataRecord.GetBoolean(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+        bool IDataRecord.GetBoolean(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
-			string value = this[i];
+            string value = this[i];
 
-			int result;
+            int result;
 
-			if (Int32.TryParse(value, out result))
-				return (result != 0);
-			else
-				return Boolean.Parse(value);
-		}
+            if (Int32.TryParse(value, out result))
+                return (result != 0);
+            else
+                return Boolean.Parse(value);
+        }
 
-		Guid IDataRecord.GetGuid(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return new Guid(this[i]);
-		}
+        Guid IDataRecord.GetGuid(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return new Guid(this[i]);
+        }
 
-		DateTime IDataRecord.GetDateTime(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return DateTime.Parse(this[i], CultureInfo.CurrentCulture);
-		}
+        DateTime IDataRecord.GetDateTime(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return DateTime.Parse(this[i], CultureInfo.CurrentCulture);
+        }
 
-		int IDataRecord.GetOrdinal(string name)
-		{
-			EnsureInitialize();
-			ValidateDataReader(DataReaderValidations.IsNotClosed);
+        int IDataRecord.GetOrdinal(string name)
+        {
+            EnsureInitialize();
+            ValidateDataReader(DataReaderValidations.IsNotClosed);
 
-			int index;
+            int index;
 
-			if (!_fieldHeaderIndexes.TryGetValue(name, out index))
-				throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldHeaderNotFound, name), "name");
+            if (!_fieldHeaderIndexes.TryGetValue(name, out index))
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldHeaderNotFound, name), "name");
 
-			return index;
-		}
+            return index;
+        }
 
-		string IDataRecord.GetDataTypeName(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return typeof(string).FullName;
-		}
+        string IDataRecord.GetDataTypeName(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return typeof(string).FullName;
+        }
 
-		float IDataRecord.GetFloat(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return Single.Parse(this[i], CultureInfo.CurrentCulture);
-		}
+        float IDataRecord.GetFloat(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return Single.Parse(this[i], CultureInfo.CurrentCulture);
+        }
 
-		IDataReader IDataRecord.GetData(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+        IDataReader IDataRecord.GetData(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
-			if (i == 0)
-				return this;
-			else
-				return null;
-		}
+            if (i == 0)
+                return this;
+            else
+                return null;
+        }
 
-		long IDataRecord.GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+        long IDataRecord.GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
-			return CopyFieldToArray(i, fieldoffset, buffer, bufferoffset, length);
-		}
+            return CopyFieldToArray(i, fieldoffset, buffer, bufferoffset, length);
+        }
 
-		string IDataRecord.GetString(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return this[i];
-		}
+        string IDataRecord.GetString(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return this[i];
+        }
 
-		char IDataRecord.GetChar(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return Char.Parse(this[i]);
-		}
+        char IDataRecord.GetChar(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return Char.Parse(this[i]);
+        }
 
-		short IDataRecord.GetInt16(int i)
-		{
-			ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
-			return Int16.Parse(this[i], CultureInfo.CurrentCulture);
-		}
+        short IDataRecord.GetInt16(int i)
+        {
+            ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
+            return Int16.Parse(this[i], CultureInfo.CurrentCulture);
+        }
 
-		#endregion
+        #endregion
 
-		#region IEnumerable<string[]> Members
+        #region IEnumerable<string[]> Members
 
-		/// <summary>
-		/// Returns an <see cref="RecordEnumerator"/>  that can iterate through CSV records.
-		/// </summary>
-		/// <returns>An <see cref="RecordEnumerator"/>  that can iterate through CSV records.</returns>
-		/// <exception cref="ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		public RecordEnumerator GetEnumerator()
-		{
-			return new RecordEnumerator(this);
-		}
+        /// <summary>
+        /// Returns an <see cref="RecordEnumerator"/>  that can iterate through CSV records.
+        /// </summary>
+        /// <returns>An <see cref="RecordEnumerator"/>  that can iterate through CSV records.</returns>
+        /// <exception cref="ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        public RecordEnumerator GetEnumerator()
+        {
+            return new RecordEnumerator(this);
+        }
 
-		/// <summary>
-		/// Returns an <see cref="IEnumerator"/>  that can iterate through CSV records.
-		/// </summary>
-		/// <returns>An <see cref="IEnumerator"/>  that can iterate through CSV records.</returns>
-		/// <exception cref="ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		IEnumerator<string[]> IEnumerable<string[]>.GetEnumerator()
-		{
-			return this.GetEnumerator();
-		}
+        /// <summary>
+        /// Returns an <see cref="IEnumerator"/>  that can iterate through CSV records.
+        /// </summary>
+        /// <returns>An <see cref="IEnumerator"/>  that can iterate through CSV records.</returns>
+        /// <exception cref="ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        IEnumerator<string[]> IEnumerable<string[]>.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
 
-		#endregion
+        #endregion
 
-		#region IEnumerable Members
+        #region IEnumerable Members
 
-		/// <summary>
-		/// Returns an <see cref="System.Collections.IEnumerator"/>  that can iterate through CSV records.
-		/// </summary>
-		/// <returns>An <see cref="System.Collections.IEnumerator"/>  that can iterate through CSV records.</returns>
-		/// <exception cref="ObjectDisposedException">
-		///	The instance has been disposed of.
-		/// </exception>
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
+        /// <summary>
+        /// Returns an <see cref="System.Collections.IEnumerator"/>  that can iterate through CSV records.
+        /// </summary>
+        /// <returns>An <see cref="System.Collections.IEnumerator"/>  that can iterate through CSV records.</returns>
+        /// <exception cref="ObjectDisposedException">
+        ///	The instance has been disposed of.
+        /// </exception>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
-		#endregion
+        #endregion
 
-		#region IDisposable members
+        #region IDisposable members
 
-		private bool _isDisposed = false;
+        private bool _isDisposed = false;
 
-	    public void Dispose()
-		{
-		    if (_isDisposed) return;
-		    _parser.Dispose();
-		    _parser = null;
-		    _eof = true;
-	        _isDisposed = true;
-		}
+        public void Dispose()
+        {
+            if (_isDisposed) return;
+            _parser.Dispose();
+            _parser = null;
+            _eof = true;
+            _isDisposed = true;
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 }
