@@ -786,7 +786,6 @@ namespace LumenWorks.Framework.IO.Csv
 				ReadNextRecord(true, false);
 
 			Debug.Assert(_fieldHeaders != null);
-			Debug.Assert(_fieldHeaders.Length > 0 || (_fieldHeaders.Length == 0 && _fieldHeaderIndexes == null));
 		}
 
 		#endregion
@@ -874,20 +873,6 @@ namespace LumenWorks.Framework.IO.Csv
 
 		#endregion
 
-		#region GetCurrentRawData
-
-		/// <summary>
-		/// Gets the current raw CSV data.
-		/// </summary>
-		/// <remarks>Used for exception handling purpose.</remarks>
-		/// <returns>The current raw CSV data.</returns>
-		public string GetCurrentRawData()
-		{
-			return _line;
-		}
-
-		#endregion
-
 		#region IsWhiteSpace
 
 		/// <summary>
@@ -966,8 +951,10 @@ namespace LumenWorks.Framework.IO.Csv
 			if (_reader.Peek() > 0)
 			{
 				_lineNumber++;
-				_line = _reader.ReadLine();
-				return true;
+				var line = new CsvParser(_reader, CsvLayout).ParsedLines().FirstOrDefault() ;
+                if (line == null) return false;
+			    _line = line;
+                return true;
 			}
 			else
 			{
@@ -1027,8 +1014,7 @@ namespace LumenWorks.Framework.IO.Csv
 				if (_hasHeaders)
 				{
 					_currentRecordIndex = -1;
-					_header = _line;
-					_fieldHeaders = _line.Split(CsvLayout).ToArray();
+					_fieldHeaders = _line.Fields;
 					_fieldCount = _fieldHeaders.Length;
 					_fieldHeaderIndexes = new Dictionary<string, int>(_fieldCount, _fieldHeaderComparer);
 					for (int i = 0; i < _fieldHeaders.Length; i++)
@@ -1045,14 +1031,14 @@ namespace LumenWorks.Framework.IO.Csv
 					if (!onlyReadHeaders)
 					{
 						if (!AdvanceToNextLine()) return false;
-						_fields = _line.Split(CsvLayout).ToArray();
+						_fields = _line.Fields;
 						_currentRecordIndex++;
 					}
 				}
 				else
 				{
 					_fieldHeaders = new string[0];
-					_fields = _line.Split(CsvLayout).ToArray();
+					_fields = _line.Fields;
 					_fieldCount = _fields.Length;
 					if (onlyReadHeaders)
 					{
@@ -1078,15 +1064,15 @@ namespace LumenWorks.Framework.IO.Csv
 
 		private string[] SplitCurrentLine()
 		{
-			var fields = _line.Split(CsvLayout);
+			var fields = _line.Fields;
 
 			var count = fields.Count();
 
 			if (count < _fieldCount)
 			{
-				if (MissingFieldAction == MissingFieldAction.ParseError) throw new MissingFieldCsvException(_line, 0, CurrentRecordIndex+1, fields.Count() - 1);
+                if (MissingFieldAction == MissingFieldAction.ParseError) throw new MissingFieldCsvException(string.Join(_delimiter.ToString(), _line.Fields), 0, CurrentRecordIndex + 1, fields.Count() - 1);
 				string s = MissingFieldAction == MissingFieldAction.ReplaceByEmpty ? "" : null;
-				fields = fields.Concat(Enumerable.Repeat(s, _fieldCount - count));
+				fields = fields.Concat(Enumerable.Repeat(s, _fieldCount - count)).ToArray();
 			}
 
 			return fields.ToArray();
@@ -1094,18 +1080,13 @@ namespace LumenWorks.Framework.IO.Csv
 
 		private bool AdvanceToNextLine()
 		{
-			_line = string.Empty;
-			do
-			{
-				if (!ReadLine()) return false;
-			} while ((SkipEmptyLines && (string.IsNullOrEmpty(_line)) || _line.StartsWith(new string(_comment, 1))));
-
-			return true;
+			_line = CsvLine.Empty;
+		    return ReadLine();
 		}
 
 		private CsvLayout CsvLayout
 		{
-			get { return new CsvLayout(_quote, _delimiter, _trimmingOptions, _escape); }
+			get { return new CsvLayout(_quote, _delimiter, _trimmingOptions, _escape, _comment, _skipEmptyLines); }
 		}
 
 		#endregion
@@ -1583,9 +1564,8 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </summary>
 		private readonly object _lock = new object();
 
-		private string _line;
+		private CsvLine _line;
 		private int _lineNumber;
-		private string _header;
 
 		/// <summary>
 		/// Occurs when the instance is disposed of.
@@ -1719,7 +1699,7 @@ namespace LumenWorks.Framework.IO.Csv
 	}
 
 
-	enum Location
+    enum Location
 	{
 		InsideField,
 		InsideQuotedField,

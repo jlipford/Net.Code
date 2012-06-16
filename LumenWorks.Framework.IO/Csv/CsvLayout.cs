@@ -6,13 +6,17 @@ namespace LumenWorks.Framework.IO.Csv
 		private readonly char _delimiter;
 		private readonly ValueTrimmingOptions _trimmingOptions;
 		private readonly char _escape;
+	    private readonly char _comment;
+	    private readonly bool _skipEmptyLines;
 
-		public CsvLayout(char quote, char delimiter, ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly, char escape = '"')
+	    public CsvLayout(char quote, char delimiter, ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly, char escape = '"', char comment = '#', bool skipEmptyLines = true)
 		{
 			_quote = quote;
 			_delimiter = delimiter;
 			_trimmingOptions = trimmingOptions;
 			_escape = escape;
+		    _comment = comment;
+	        _skipEmptyLines = skipEmptyLines;
 		}
 
 		public char Quote
@@ -34,5 +38,15 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			get { return _escape; }
 		}
+
+	    public char Comment
+	    {
+	        get { return _comment; }
+	    }
+
+	    public bool SkipEmptyLines
+	    {
+	        get { return _skipEmptyLines; }
+	    }
 	}
 }

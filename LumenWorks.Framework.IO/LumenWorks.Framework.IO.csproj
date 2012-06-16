@@ -74,6 +74,8 @@
     <Compile Include="Csv\CachedCsvReader.CsvPropertyDescriptor.cs" />
     <Compile Include="Csv\CachedCsvReader.CsvRecordComparer.cs" />
     <Compile Include="Csv\BufferSplit.cs" />
+    <Compile Include="Csv\CsvLine.cs" />
+    <Compile Include="Csv\CsvParser.cs" />
     <Compile Include="Csv\CsvReader.cs" />
     <Compile Include="Csv\CsvReader.DataReaderValidations.cs" />
     <Compile Include="Csv\CsvReader.RecordEnumerator.cs" />
