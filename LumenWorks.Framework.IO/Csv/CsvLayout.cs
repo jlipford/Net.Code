@@ -1,6 +1,6 @@
 namespace LumenWorks.Framework.IO.Csv
 {
-	public struct CsvLayout
+	public class CsvLayout
 	{
 		private readonly char _quote;
 		private readonly char _delimiter;
@@ -8,8 +8,17 @@ namespace LumenWorks.Framework.IO.Csv
 		private readonly char _escape;
 	    private readonly char _comment;
 	    private readonly bool _skipEmptyLines;
+	    private readonly MissingFieldAction _missingFieldAction;
 
-	    public CsvLayout(char quote, char delimiter, ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly, char escape = '"', char comment = '#', bool skipEmptyLines = true)
+
+	    public CsvLayout(
+            char quote = '"', 
+            char delimiter = ',', 
+            ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly, 
+            char escape = '"', 
+            char comment = '#', 
+            bool skipEmptyLines = true,
+            MissingFieldAction missingFieldAction = MissingFieldAction.ParseError)
 		{
 			_quote = quote;
 			_delimiter = delimiter;
@@ -17,6 +26,7 @@ namespace LumenWorks.Framework.IO.Csv
 			_escape = escape;
 		    _comment = comment;
 	        _skipEmptyLines = skipEmptyLines;
+	        _missingFieldAction = missingFieldAction;
 		}
 
 		public char Quote
@@ -47,6 +57,11 @@ namespace LumenWorks.Framework.IO.Csv
 	    public bool SkipEmptyLines
 	    {
 	        get { return _skipEmptyLines; }
+	    }
+
+	    public MissingFieldAction MissingFieldAction
+	    {
+	        get { return _missingFieldAction; }
 	    }
 	}
 }

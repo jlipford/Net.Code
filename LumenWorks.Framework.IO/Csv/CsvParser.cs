@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace LumenWorks.Framework.IO.Csv
 {
@@ -18,6 +19,7 @@ namespace LumenWorks.Framework.IO.Csv
 
         public int LineNumber { get; set; }
         public int ColumnNumber { get; set; }
+        private int? _fieldCount;
 
         public CsvLayout Layout { get; set; }
 
@@ -28,13 +30,28 @@ namespace LumenWorks.Framework.IO.Csv
             {
                 LineNumber++;
                 var readLine = _textReader.ReadLine();
+
+                var fields = readLine.Split(Layout).ToList();
+
+                if (!_fieldCount.HasValue) _fieldCount = fields.Count();
+
+                var count = fields.Count();
+
+                if (count < _fieldCount)
+                {
+                    if (Layout.MissingFieldAction == MissingFieldAction.ParseError) throw new MissingFieldCsvException(readLine, 0, LineNumber - 1, fields.Count() - 1);
+                    string s = Layout.MissingFieldAction == MissingFieldAction.ReplaceByEmpty ? "" : null;
+                    fields = fields.Concat(Enumerable.Repeat(s, _fieldCount.Value - count)).ToList();
+                }
+
+
                 if (string.IsNullOrEmpty(readLine))
                 {
                     if (!Layout.SkipEmptyLines) yield return CsvLine.Empty;
                 }
                 else if (!readLine.StartsWith(new string(Layout.Comment, 1)))
                 {
-                    yield return new CsvLine(readLine.Split(Layout));
+                    yield return new CsvLine(fields);
                 }
             }
         }

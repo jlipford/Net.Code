@@ -492,13 +492,10 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <value>The action to take when a field is missing.</value>
 		public MissingFieldAction MissingFieldAction
 		{
-			get
-			{
-				return _missingFieldAction;
-			}
 			set
 			{
 				_missingFieldAction = value;
+			    _parser.Layout = CsvLayout;
 			}
 		}
 
@@ -508,10 +505,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <value>A value indicating if the reader supports multiline field.</value>
 		public bool SupportsMultiline
 		{
-			get
-			{
-				return _supportsMultiline;
-			}
+			get { return _supportsMultiline; }
 			set
 			{
 				_supportsMultiline = value;
@@ -1057,14 +1051,6 @@ namespace LumenWorks.Framework.IO.Csv
 		{
 			var fields = _line.Fields;
 
-			var count = fields.Count();
-
-			if (count < _fieldCount)
-			{
-                if (MissingFieldAction == MissingFieldAction.ParseError) throw new MissingFieldCsvException(string.Join(_delimiter.ToString(), _line.Fields), 0, CurrentRecordIndex + 1, fields.Count() - 1);
-				string s = MissingFieldAction == MissingFieldAction.ReplaceByEmpty ? "" : null;
-				fields = fields.Concat(Enumerable.Repeat(s, _fieldCount - count)).ToArray();
-			}
 
 			return fields.ToArray();
 		}
@@ -1077,7 +1063,7 @@ namespace LumenWorks.Framework.IO.Csv
 
 		private CsvLayout CsvLayout
 		{
-			get { return new CsvLayout(_quote, _delimiter, _trimmingOptions, _escape, _comment, _skipEmptyLines); }
+			get { return new CsvLayout(_quote, _delimiter, _trimmingOptions, _escape, _comment, _skipEmptyLines, _missingFieldAction); }
 		}
 
 		#endregion
