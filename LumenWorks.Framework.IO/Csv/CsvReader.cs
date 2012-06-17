@@ -314,7 +314,7 @@ namespace LumenWorks.Framework.IO.Csv
             _currentRecordIndex = -1;
             _defaultParseErrorAction = ParseErrorAction.RaiseEvent;
 
-            _csvLayout = new CsvLayout(quote, delimiter, trimmingOptions, escape, comment);
+            _csvLayout = new CsvLayout(quote, delimiter, trimmingOptions, escape, comment, hasHeaders);
             _parser = new CsvParser(reader, _csvLayout);
             _enumerator = _parser.GetEnumerator();
         }
@@ -518,14 +518,7 @@ namespace LumenWorks.Framework.IO.Csv
         public string[] GetFieldHeaders()
         {
             EnsureInitialize();
-            Debug.Assert(_fieldHeaders != null, "Field headers must be non null.");
-
-            var fieldHeaders = new string[_fieldHeaders.Length];
-
-            for (int i = 0; i < fieldHeaders.Length; i++)
-                fieldHeaders[i] = _fieldHeaders[i];
-
-            return fieldHeaders;
+            return _fieldHeaders.ToArray();
         }
 
         /// <summary>
@@ -720,14 +713,14 @@ namespace LumenWorks.Framework.IO.Csv
         {
             if (_initialized)
                 return;
-            
-            if (!ReadLine()) return;
 
-            if (_hasHeaders)
+            _currentRecordIndex = -1;
+
+            var header = _parser.Header;
+
+            if (header != null)
             {
-                _currentRecordIndex = -1;
-                _fieldHeaders = _line.Fields;
-                _fieldCount = _fieldHeaders.Length;
+                _fieldHeaders = header.Fields;
                 _fieldHeaderIndexes = new Dictionary<string, int>(_fieldCount, _fieldHeaderComparer);
                 for (int i = 0; i < _fieldHeaders.Length; i++)
                 {
@@ -744,11 +737,8 @@ namespace LumenWorks.Framework.IO.Csv
             else
             {
                 _fieldHeaders = new string[0];
-                _fields = _line.Fields;
-                _fieldCount = _fields.Length;
-                _firstRecordInCache = true;
-                _currentRecordIndex = -1;
             }
+            _fieldCount = _parser.FieldCount;
             _initialized = true;
             Debug.Assert(_fieldHeaders != null);
         }

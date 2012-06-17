@@ -22,16 +22,45 @@ namespace LumenWorks.Framework.IO.Csv
         private int? _fieldCount;
         private MissingFieldAction _missingFieldAction;
         private bool _skipEmptyLines = true;
+        private CsvLine _cachedLine;
+        private bool _initialized;
+        private CsvLine _header;
 
         public CsvLayout Layout { get; set; }
 
+        public CsvLine Header
+        {
+            get
+            {
+                Initialize();
+                return _header;
+            }
+            set { _header = value; }
+        }
+
+        public int FieldCount
+        {
+            get { return _fieldCount??-1; }
+        }
+
         public IEnumerable<CsvLine> ParsedLines()
         {
-            if (_disposed) throw new ObjectDisposedException("CsvParser");
+            Initialize();
+
+            if (_cachedLine != null)
+            {
+                yield return _cachedLine;
+                _cachedLine = null;
+            }
+
             while (_textReader.Peek() > 0)
             {
                 LineNumber++;
                 var readLine = _textReader.ReadLine();
+
+
+                if (string.IsNullOrEmpty(readLine) && _skipEmptyLines) continue;
+                if (readLine != null && readLine.StartsWith(new string(Layout.Comment, 1))) continue;
 
                 var fields = readLine.Split(Layout).ToList();
 
@@ -50,12 +79,28 @@ namespace LumenWorks.Framework.IO.Csv
 
                 if (string.IsNullOrEmpty(readLine))
                 {
-                    if (!_skipEmptyLines) yield return CsvLine.Empty;
+                    yield return CsvLine.Empty;
                 }
-                else if (!readLine.StartsWith(new string(Layout.Comment, 1)))
+                else
                 {
                     yield return new CsvLine(fields);
                 }
+            }
+        }
+
+        private void Initialize()
+        {
+            if (_initialized) return;
+            _initialized = true;
+            var firstLine = ParsedLines().FirstOrDefault();
+
+            if (Layout.HasHeaders)
+            {
+                Header = firstLine;
+            }
+            else
+            {
+                _cachedLine = firstLine;
             }
         }
 

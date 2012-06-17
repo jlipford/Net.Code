@@ -7,6 +7,7 @@ namespace LumenWorks.Framework.IO.Csv
 		private readonly ValueTrimmingOptions _trimmingOptions;
 		private readonly char _escape;
 	    private readonly char _comment;
+	    private readonly bool _hasHeaders;
 
 
 	    public CsvLayout(
@@ -14,13 +15,15 @@ namespace LumenWorks.Framework.IO.Csv
             char delimiter = ',', 
             ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly, 
             char escape = '"', 
-            char comment = '#')
+            char comment = '#',
+            bool hasHeaders = false)
 		{
 			_quote = quote;
 			_delimiter = delimiter;
 			_trimmingOptions = trimmingOptions;
 			_escape = escape;
 		    _comment = comment;
+	        _hasHeaders = hasHeaders;
 		}
 
 		public char Quote
@@ -46,6 +49,11 @@ namespace LumenWorks.Framework.IO.Csv
 	    public char Comment
 	    {
 	        get { return _comment; }
+	    }
+
+	    public bool HasHeaders
+	    {
+	        get { return _hasHeaders; }
 	    }
 	}
 }
