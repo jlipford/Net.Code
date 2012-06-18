@@ -114,16 +114,6 @@ namespace LumenWorks.Framework.IO.Csv
         private bool _initialized;
 
         /// <summary>
-        /// Contains the field headers.
-        /// </summary>
-        private string[] _fieldHeaders;
-
-        /// <summary>
-        /// Contains the dictionary of field indexes by header. The key is the field name and the value is its index.
-        /// </summary>
-        private Dictionary<string, int> _fieldHeaderIndexes;
-
-        /// <summary>
         /// Contains the current record index in the CSV file.
         /// A value of <see cref="Int32.MinValue"/> means that the reader has not been initialized yet.
         /// Otherwise, a negative value means that no record has been read yet.
@@ -286,7 +276,6 @@ namespace LumenWorks.Framework.IO.Csv
         public CsvReader(TextReader reader, bool hasHeaders, char delimiter, char quote, char escape, char comment, ValueTrimmingOptions trimmingOptions, int bufferSize)
         {
             _fields = new string[0];
-            _fieldHeaders = new string[0];
 
             if (reader == null)
                 throw new ArgumentNullException("reader");
@@ -309,7 +298,6 @@ namespace LumenWorks.Framework.IO.Csv
             }
 
             _hasHeaders = hasHeaders;
-            DefaultHeaderName = "Column";
 
             _currentRecordIndex = -1;
             _defaultParseErrorAction = ParseErrorAction.RaiseEvent;
@@ -474,7 +462,7 @@ namespace LumenWorks.Framework.IO.Csv
         /// The header index will be appended to the specified name.
         /// </summary>
         /// <value>The default header name when it is an empty string or only whitespaces.</value>
-        public string DefaultHeaderName { get; set; }
+        public string DefaultHeaderName { set { _parser.DefaultHeaderName = value; }}
 
         #endregion
 
@@ -518,7 +506,8 @@ namespace LumenWorks.Framework.IO.Csv
         public string[] GetFieldHeaders()
         {
             EnsureInitialize();
-            return _fieldHeaders.ToArray();
+            if (_parser.Header == null) return new string[0];
+            return _parser.Header.Fields.ToArray();
         }
 
         /// <summary>
@@ -716,31 +705,12 @@ namespace LumenWorks.Framework.IO.Csv
 
             _currentRecordIndex = -1;
 
-            var header = _parser.Header;
+            _parser.Initialize();
 
-            if (header != null)
-            {
-                _fieldHeaders = header.Fields;
-                _fieldHeaderIndexes = new Dictionary<string, int>(_fieldCount, _fieldHeaderComparer);
-                for (int i = 0; i < _fieldHeaders.Length; i++)
-                {
-                    string headerName = _fieldHeaders[i];
-                    if (string.IsNullOrEmpty(headerName) || headerName.Trim().Length == 0)
-                    {
-                        headerName = DefaultHeaderName + i.ToString();
-                        _fieldHeaders[i] = headerName;
-                    }
-
-                    _fieldHeaderIndexes.Add(headerName, i);
-                }
-            }
-            else
-            {
-                _fieldHeaders = new string[0];
-            }
             _fieldCount = _parser.FieldCount;
+
             _initialized = true;
-            Debug.Assert(_fieldHeaders != null);
+
         }
 
         #endregion
@@ -761,7 +731,7 @@ namespace LumenWorks.Framework.IO.Csv
 
             int index;
 
-            if (_fieldHeaderIndexes != null && _fieldHeaderIndexes.TryGetValue(header, out index))
+            if (_parser.Header != null && _parser.Header.TryGetIndex(header, out index))
                 return index;
             return -1;
         }
@@ -928,10 +898,6 @@ namespace LumenWorks.Framework.IO.Csv
         /// <summary>
         /// Reads the next record.
         /// </summary>
-        /// <param name="onlyReadHeaders">
-        /// Indicates if the reader will proceed to the next record after having read headers.
-        /// <see langword="true"/> if it stops after having read headers; otherwise, <see langword="false"/>.
-        /// </param>
         /// <param name="skipToNextLine">
         /// Indicates if the reader will skip directly to the next line without parsing the current one. 
         /// To be used when an error occurs.
@@ -1120,7 +1086,7 @@ namespace LumenWorks.Framework.IO.Csv
             string[] columnNames;
 
             if (_hasHeaders)
-                columnNames = _fieldHeaders;
+                columnNames = _parser.Header.Fields;
             else
             {
                 columnNames = new string[_fieldCount];
@@ -1266,7 +1232,7 @@ namespace LumenWorks.Framework.IO.Csv
                 throw new ArgumentOutOfRangeException("i", i, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, i));
 
             if (_hasHeaders)
-                return _fieldHeaders[i];
+                return _parser.Header.Fields[i];
             else
                 return "Column" + i.ToString(CultureInfo.InvariantCulture);
         }
@@ -1316,7 +1282,7 @@ namespace LumenWorks.Framework.IO.Csv
 
             int index;
 
-            if (!_fieldHeaderIndexes.TryGetValue(name, out index))
+            if (!_parser.Header.TryGetIndex(name, out index))
                 throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldHeaderNotFound, name), "name");
 
             return index;

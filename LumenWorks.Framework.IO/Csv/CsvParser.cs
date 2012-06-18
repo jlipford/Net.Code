@@ -25,6 +25,7 @@ namespace LumenWorks.Framework.IO.Csv
         private CsvLine _cachedLine;
         private bool _initialized;
         private CsvHeader _header;
+        private string _defaultHeaderName = "Column";
 
         public CsvLayout Layout { get; set; }
 
@@ -43,7 +44,13 @@ namespace LumenWorks.Framework.IO.Csv
             get { return _fieldCount??-1; }
         }
 
-        public IEnumerable<CsvLine> ParsedLines()
+        public string DefaultHeaderName
+        {
+            get { return _defaultHeaderName; }
+            set { _defaultHeaderName = value; }
+        }
+
+        public IEnumerable<CsvLine> Lines()
         {
             Initialize();
 
@@ -88,15 +95,15 @@ namespace LumenWorks.Framework.IO.Csv
             }
         }
 
-        private void Initialize()
+        public void Initialize()
         {
             if (_initialized) return;
             _initialized = true;
-            var firstLine = ParsedLines().FirstOrDefault();
+            var firstLine = Lines().FirstOrDefault();
 
             if (Layout.HasHeaders && firstLine != null)
             {
-                Header = new CsvHeader(firstLine.Fields);
+                Header = new CsvHeader(firstLine.Fields, DefaultHeaderName);
             }
             else
             {
@@ -106,7 +113,7 @@ namespace LumenWorks.Framework.IO.Csv
 
         public IEnumerator<CsvLine> GetEnumerator()
         {
-            return ParsedLines().GetEnumerator();
+            return Lines().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -129,18 +136,6 @@ namespace LumenWorks.Framework.IO.Csv
         public void SkipEmptyLines(bool value)
         {
             _skipEmptyLines = value;
-        }
-    }
-
-    class CsvHeader : CsvLine
-    {
-        public CsvHeader(IEnumerable<string> fields) : base(fields)
-        {
-        }
-
-        public int this[string headerName]
-        {
-            get { return 0; }
         }
     }
 }
