@@ -24,11 +24,11 @@ namespace LumenWorks.Framework.IO.Csv
         private bool _skipEmptyLines = true;
         private CsvLine _cachedLine;
         private bool _initialized;
-        private CsvLine _header;
+        private CsvHeader _header;
 
         public CsvLayout Layout { get; set; }
 
-        public CsvLine Header
+        public CsvHeader Header
         {
             get
             {
@@ -94,9 +94,9 @@ namespace LumenWorks.Framework.IO.Csv
             _initialized = true;
             var firstLine = ParsedLines().FirstOrDefault();
 
-            if (Layout.HasHeaders)
+            if (Layout.HasHeaders && firstLine != null)
             {
-                Header = firstLine;
+                Header = new CsvHeader(firstLine.Fields);
             }
             else
             {
@@ -129,6 +129,18 @@ namespace LumenWorks.Framework.IO.Csv
         public void SkipEmptyLines(bool value)
         {
             _skipEmptyLines = value;
+        }
+    }
+
+    class CsvHeader : CsvLine
+    {
+        public CsvHeader(IEnumerable<string> fields) : base(fields)
+        {
+        }
+
+        public int this[string headerName]
+        {
+            get { return 0; }
         }
     }
 }

@@ -7,10 +7,6 @@ namespace LumenWorks.Framework.IO.Csv
     {
         private readonly List<string> _fields = new List<string>();
 
-        public CsvLine()
-        {
-        }
-
         public CsvLine(IEnumerable<string> fields)
         {
             _fields.AddRange(fields);
@@ -29,6 +25,6 @@ namespace LumenWorks.Framework.IO.Csv
             }
         }
 
-        public static readonly CsvLine Empty = new CsvLine();
+        public static readonly CsvLine Empty = new CsvLine(Enumerable.Empty<string>());
     }
 }
