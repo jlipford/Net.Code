@@ -302,8 +302,9 @@ namespace LumenWorks.Framework.IO.Csv
             _currentRecordIndex = -1;
             _defaultParseErrorAction = ParseErrorAction.RaiseEvent;
 
-            _csvLayout = new CsvLayout(quote, delimiter, trimmingOptions, escape, comment, hasHeaders);
-            _parser = new CsvParser(reader, _csvLayout);
+            _csvLayout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
+            _behaviour = new CsvBehaviour(trimmingOptions);
+            _parser = new CsvParser(reader, _csvLayout, _behaviour);
             _enumerator = _parser.GetEnumerator();
         }
 
@@ -402,7 +403,7 @@ namespace LumenWorks.Framework.IO.Csv
         {
             get
             {
-                return _csvLayout.TrimmingOptions;
+                return _behaviour.TrimmingOptions;
             }
         }
 
@@ -1384,6 +1385,7 @@ namespace LumenWorks.Framework.IO.Csv
         #region IDisposable members
 
         private bool _isDisposed = false;
+        private CsvBehaviour _behaviour;
 
         public void Dispose()
         {

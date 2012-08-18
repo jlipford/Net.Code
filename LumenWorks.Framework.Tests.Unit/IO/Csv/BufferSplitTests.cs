@@ -13,7 +13,12 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 	{
         private static IEnumerable<string> Split(string line, CsvLayout splitLineParams)
         {
-            var splitter = new BufferSplit(new StringReader(line), splitLineParams);
+            return Split(line, splitLineParams, new CsvBehaviour());
+        }
+
+        private static IEnumerable<string> Split(string line, CsvLayout splitLineParams, CsvBehaviour behaviour)
+        {
+            var splitter = new BufferSplit(new StringReader(line), splitLineParams, behaviour);
             var result = splitter.Split();
             return result.First();
         }
@@ -102,8 +107,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		public void WhenValueTrimmingIsNone_LastFieldWithLeadingAndTrailingWhitespace_WhitespaceIsNotTrimmed()
 		{
 			const string line = "x,y, z ";
-			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '"');
-            var result = Split(line, splitLineParams);
+			var splitLineParams = new CsvLayout('"', ',', '"');
+            var result = Split(line, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
             CollectionAssert.AreEqual(new[] { @"x", "y", " z " }, result);
 
 		}
@@ -121,8 +126,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		public void EscapeCharacterInsideQuotedStringIsEscaped()
 		{
 			const string line = "\"\\\\\"";
-			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '\\');
-            var result = Split(line, splitLineParams);
+			var splitLineParams = new CsvLayout('"', ',', '\\');
+            var result = Split(line, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
             Assert.AreEqual("\\", result.Single());
 		}
 
@@ -130,8 +135,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		public void LineWithOnlySeparatorIsSplitIntoTwoEmptyStrings()
 		{
 			const string line = ",";
-			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '\\');
-            var result = Split(line, splitLineParams);
+			var splitLineParams = new CsvLayout('"', ',', '\\');
+            var result = Split(line, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
             CollectionAssert.AreEqual(new[] { "", "" }, result);
 		}
 
@@ -140,8 +145,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		{
 			const string data = @"a,b,""line1
 line2""";
-			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '\\');
-            var result = Split(data, splitLineParams);
+			var splitLineParams = new CsvLayout('"', ',', '\\');
+            var result = Split(data, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
             CollectionAssert.AreEqual(new[] { "a", "b", @"line1
 line2" }, result);
 		}
@@ -154,7 +159,7 @@ line2" }, result);
 
             var csvLayout = new CsvLayout('\"', ';');
 
-            var splitter = new BufferSplit(new StringReader(data1), csvLayout);
+            var splitter = new BufferSplit(new StringReader(data1), csvLayout, new CsvBehaviour());
 
             var result = splitter.Split().ToArray();
 
@@ -170,7 +175,7 @@ line2" }, result);
 
             var csvLayout = new CsvLayout('\"', ';');
 
-            var splitter = new BufferSplit(new StringReader(data1), csvLayout);
+            var splitter = new BufferSplit(new StringReader(data1), csvLayout, new CsvBehaviour());
 
             var result = splitter.Split().ToArray();
 
@@ -185,7 +190,7 @@ line2" }, result);
 
             var csvLayout = new CsvLayout('\"', ';');
 
-            var splitter = new BufferSplit(new StringReader(data1), csvLayout);
+            var splitter = new BufferSplit(new StringReader(data1), csvLayout, new CsvBehaviour());
 
             var result = splitter.Split().ToArray();
 
@@ -201,7 +206,7 @@ side""  x "";3";
 
             var csvLayout = new CsvLayout('\"', ';');
 
-            var splitter = new BufferSplit(new StringReader(data1), csvLayout);
+            var splitter = new BufferSplit(new StringReader(data1), csvLayout, new CsvBehaviour());
 
             var result = splitter.Split().ToArray();
 
@@ -215,7 +220,7 @@ side""  x ", "3" }, result[0]);
         {
             var data = CsvReaderSampleData.SampleData1;
 
-            var splitter = new BufferSplit(new StringReader(data), new CsvLayout());
+            var splitter = new BufferSplit(new StringReader(data), new CsvLayout(), new CsvBehaviour());
 
             var result = splitter.Split().ToArray();
 

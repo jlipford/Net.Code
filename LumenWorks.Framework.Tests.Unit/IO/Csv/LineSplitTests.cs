@@ -94,8 +94,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		public void WhenValueTrimmingIsNone_LastFieldWithLeadingAndTrailingWhitespace_WhitespaceIsNotTrimmed()
 		{
 			const string data = "x,y, z ";
-			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '"');
-			var result = data.Split(splitLineParams);
+			var splitLineParams = new CsvLayout('"', ',', '"');
+            var result = data.Split(splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
 			CollectionAssert.AreEqual(new[]{@"x", "y", " z "}, result);
 
 		}
@@ -113,8 +113,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		public void EscapeCharacterInsideQuotedStringIsEscaped()
 		{
 			const string data = "\"\\\\\"";
-			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '\\');
-			var result = data.Split(splitLineParams);
+			var splitLineParams = new CsvLayout('"', ',', '\\');
+            var result = data.Split(splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
 			Assert.AreEqual("\\", result.Single());
 		}
 
@@ -122,8 +122,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		public void LineWithOnlySeparatorIsSplitIntoTwoEmptyStrings()
 		{
 			const string data = ",";
-			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '\\');
-			var result = data.Split(splitLineParams);
+			var splitLineParams = new CsvLayout('"', ',', '\\');
+            var result = data.Split(splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
 			CollectionAssert.AreEqual(new[]{"",""}, result);
 		}
 
@@ -132,8 +132,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		{
 			const string data = @"a,b,""line1
 line2""";
-			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '\\');
-			var result = data.Split(splitLineParams);
+			var splitLineParams = new CsvLayout('"', ',', '\\');
+            var result = data.Split(splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
 			CollectionAssert.AreEqual(new[] { "a", "b", @"line1
 line2" }, result);
 		}

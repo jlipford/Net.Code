@@ -17,13 +17,15 @@ namespace LumenWorks.Framework.IO.Csv
         private char[] _buffer;
         private readonly TextReader _textReader;
         private readonly CsvLayout _csvLayout;
+        private readonly CsvBehaviour _behaviour;
         private bool _disposed;
         private int _lineNumber;
 
-        public BufferSplit(TextReader textReader, CsvLayout csvLayout)
+        public BufferSplit(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
         {
             _textReader = textReader;
             _csvLayout = csvLayout;
+            _behaviour = behaviour;
             _buffer = new char[4];
         }
 
@@ -35,9 +37,9 @@ namespace LumenWorks.Framework.IO.Csv
         string Yield(StringBuilder builder, bool quoted)
         {
             var result = builder.ToString();
-            if (_csvLayout.TrimmingOptions == ValueTrimmingOptions.All
-                || (quoted && _csvLayout.TrimmingOptions == ValueTrimmingOptions.QuotedOnly)
-                || (!quoted && _csvLayout.TrimmingOptions == ValueTrimmingOptions.UnquotedOnly))
+            if (_behaviour.TrimmingOptions == ValueTrimmingOptions.All
+                || (quoted && _behaviour.TrimmingOptions == ValueTrimmingOptions.QuotedOnly)
+                || (!quoted && _behaviour.TrimmingOptions == ValueTrimmingOptions.UnquotedOnly))
                 result = result.Trim();
             return result;
         }

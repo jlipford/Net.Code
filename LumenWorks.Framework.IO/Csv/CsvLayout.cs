@@ -1,11 +1,25 @@
 namespace LumenWorks.Framework.IO.Csv
 {
 
+    public class CsvBehaviour
+    {
+        private readonly ValueTrimmingOptions _trimmingOptions;
+
+        public CsvBehaviour(ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly)
+        {
+            _trimmingOptions = trimmingOptions;
+        }
+
+        public ValueTrimmingOptions TrimmingOptions
+        {
+            get { return _trimmingOptions; }
+        }
+    }
+
 	public class CsvLayout
 	{
 		private readonly char _quote;
 		private readonly char _delimiter;
-		private readonly ValueTrimmingOptions _trimmingOptions;
 		private readonly char _escape;
 	    private readonly char _comment;
 	    private readonly bool _hasHeaders;
@@ -14,14 +28,12 @@ namespace LumenWorks.Framework.IO.Csv
 	    public CsvLayout(
             char quote = '"', 
             char delimiter = ',', 
-            ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly, 
             char escape = '"', 
             char comment = '#',
             bool hasHeaders = false)
 		{
 			_quote = quote;
 			_delimiter = delimiter;
-			_trimmingOptions = trimmingOptions;
 			_escape = escape;
 		    _comment = comment;
 	        _hasHeaders = hasHeaders;
@@ -35,11 +47,6 @@ namespace LumenWorks.Framework.IO.Csv
 		public char Delimiter
 		{
 			get { return _delimiter; }
-		}
-
-		public ValueTrimmingOptions TrimmingOptions
-		{
-			get { return _trimmingOptions; }
 		}
 
 		public char Escape

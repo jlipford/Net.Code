@@ -11,10 +11,11 @@ namespace LumenWorks.Framework.IO.Csv
         private readonly TextReader _textReader;
         private bool _disposed;
 
-        public CsvParser(TextReader textReader, CsvLayout layOut)
+        public CsvParser(TextReader textReader, CsvLayout layOut, CsvBehaviour behaviour)
         {
             _textReader = textReader;
             Layout = layOut;
+            Behaviour = behaviour;
         }
 
         public int LineNumber { get; set; }
@@ -27,7 +28,9 @@ namespace LumenWorks.Framework.IO.Csv
         private CsvHeader _header;
         private string _defaultHeaderName = "Column";
 
-        public CsvLayout Layout { get; set; }
+        public CsvLayout Layout { get; private set; }
+
+        public CsvBehaviour Behaviour { get; private set; }
 
         public CsvHeader Header
         {
@@ -69,7 +72,7 @@ namespace LumenWorks.Framework.IO.Csv
                 if (string.IsNullOrEmpty(readLine) && _skipEmptyLines) continue;
                 if (readLine != null && readLine.StartsWith(new string(Layout.Comment, 1))) continue;
 
-                var fields = readLine.Split(Layout).ToList();
+                var fields = readLine.Split(Layout, Behaviour).ToList();
 
                 if (!_fieldCount.HasValue) _fieldCount = fields.Count();
 
