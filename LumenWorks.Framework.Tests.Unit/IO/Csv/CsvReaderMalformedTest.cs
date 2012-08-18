@@ -91,9 +91,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 
 			// test csv
 
-			using (CsvReader csv = new CsvReader(new StringReader(sb.ToString()), false, bufferSize))
+			using (CsvReader csv = new CsvReader(new StringReader(sb.ToString()), bufferSize, new CsvLayout(hasHeaders:false), new CsvBehaviour(missingFieldAction:action)))
 			{
-				csv.MissingFieldAction = action;
 				Assert.AreEqual(fieldCount, csv.FieldCount);
 
 				while (csv.ReadNextRecord())
@@ -386,10 +385,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 				+ "\na,b,c,d,"
 				+ "\na,b,";
 
-			using (var csv = new CsvReader(new StringReader(Data), false))
+			using (var csv = new CsvReader(new StringReader(Data), CsvReader.DefaultBufferSize, new CsvLayout(hasHeaders:false), new  CsvBehaviour(missingFieldAction:MissingFieldAction.ReplaceByNull)))
 			{
-				csv.MissingFieldAction = MissingFieldAction.ReplaceByNull;
-
 				var record = new string[5];
 
 				Assert.IsTrue(csv.ReadNextRecord());

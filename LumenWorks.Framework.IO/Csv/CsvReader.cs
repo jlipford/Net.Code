@@ -95,11 +95,6 @@ namespace LumenWorks.Framework.IO.Csv
         private int _bufferSize;
 
         /// <summary>
-        /// Indicates if field names are located on the first non commented line.
-        /// </summary>
-        private bool _hasHeaders;
-
-        /// <summary>
         /// Contains the default action to take when a parsing error has occured.
         /// </summary>
         private ParseErrorAction _defaultParseErrorAction;
@@ -273,7 +268,20 @@ namespace LumenWorks.Framework.IO.Csv
         /// <exception cref="ArgumentOutOfRangeException">
         ///		<paramref name="bufferSize"/> must be 1 or more.
         /// </exception>
-        public CsvReader(TextReader reader, bool hasHeaders, char delimiter, char quote, char escape, char comment, ValueTrimmingOptions trimmingOptions, int bufferSize)
+        public CsvReader(
+            TextReader reader, 
+            bool hasHeaders, 
+            char delimiter, 
+            char quote, 
+            char escape, 
+            char comment, 
+            ValueTrimmingOptions trimmingOptions, 
+            int bufferSize)
+            : this (reader, bufferSize, new CsvLayout(quote, delimiter, escape, comment, hasHeaders), new CsvBehaviour(trimmingOptions))
+        {
+        }
+
+        public CsvReader(TextReader reader, int bufferSize, CsvLayout layout, CsvBehaviour behaviour)
         {
             _fields = new string[0];
 
@@ -297,13 +305,11 @@ namespace LumenWorks.Framework.IO.Csv
                 }
             }
 
-            _hasHeaders = hasHeaders;
-
             _currentRecordIndex = -1;
             _defaultParseErrorAction = ParseErrorAction.RaiseEvent;
 
-            _csvLayout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
-            _behaviour = new CsvBehaviour(trimmingOptions);
+            _csvLayout = layout;
+            _behaviour = behaviour;
             _parser = new CsvParser(reader, _csvLayout, _behaviour);
             _enumerator = _parser.GetEnumerator();
         }
@@ -391,7 +397,7 @@ namespace LumenWorks.Framework.IO.Csv
         {
             get
             {
-                return _hasHeaders;
+                return _csvLayout.HasHeaders;
             }
         }
 
@@ -431,30 +437,6 @@ namespace LumenWorks.Framework.IO.Csv
             set
             {
                 _defaultParseErrorAction = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the action to take when a field is missing.
-        /// </summary>
-        /// <value>The action to take when a field is missing.</value>
-        public MissingFieldAction MissingFieldAction
-        {
-            set
-            {
-                _parser.SetMissingFieldAction(value);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating if the reader will skip empty lines.
-        /// </summary>
-        /// <value>A value indicating if the reader will skip empty lines.</value>
-        public bool SkipEmptyLines
-        {
-            set
-            {
-                _parser.SkipEmptyLines(value);
             }
         }
 
@@ -548,7 +530,7 @@ namespace LumenWorks.Framework.IO.Csv
         #region Indexers
 
         /// <summary>
-        /// Gets the field with the specified name and record position. <see cref="_hasHeaders"/> must be <see langword="true"/>.
+        /// Gets the field with the specified name and record position. <see cref="HasHeaders"/> must be <see langword="true"/>.
         /// </summary>
         /// <value>
         /// The field with the specified name and record position.
@@ -625,7 +607,7 @@ namespace LumenWorks.Framework.IO.Csv
         }
 
         /// <summary>
-        /// Gets the field with the specified name. <see cref="_hasHeaders"/> must be <see langword="true"/>.
+        /// Gets the field with the specified name. <see cref="HasHeaders"/> must be <see langword="true"/>.
         /// </summary>
         /// <value>
         /// The field with the specified name.
@@ -652,7 +634,7 @@ namespace LumenWorks.Framework.IO.Csv
                 if (string.IsNullOrEmpty(field))
                     throw new ArgumentNullException("field");
 
-                if (!_hasHeaders)
+                if (!_csvLayout.HasHeaders)
                     throw new InvalidOperationException(ExceptionMessage.NoHeaders);
 
                 int index = GetFieldIndex(field);
@@ -1086,7 +1068,7 @@ namespace LumenWorks.Framework.IO.Csv
 
             string[] columnNames;
 
-            if (_hasHeaders)
+            if (_csvLayout.HasHeaders)
                 columnNames = _parser.Header.Fields;
             else
             {
@@ -1232,7 +1214,7 @@ namespace LumenWorks.Framework.IO.Csv
             if (i < 0 || i >= _fieldCount)
                 throw new ArgumentOutOfRangeException("i", i, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, i));
 
-            if (_hasHeaders)
+            if (_csvLayout.HasHeaders)
                 return _parser.Header.Fields[i];
             else
                 return "Column" + i.ToString(CultureInfo.InvariantCulture);

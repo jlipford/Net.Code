@@ -981,11 +981,11 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		[Test]
 		public void ParsingTest43()
 		{
-			using (var csv = new CsvReader(new StringReader("a,b\n   "), false))
+			using (var csv = new CsvReader(new StringReader("a,b\n   "), CsvReader.DefaultBufferSize, new CsvLayout(hasHeaders:false), new CsvBehaviour(
+                missingFieldAction:MissingFieldAction.ReplaceByNull,
+                skipEmptyLines: true
+                )))
 			{
-				csv.SkipEmptyLines = true;
-				csv.MissingFieldAction = MissingFieldAction.ReplaceByNull;
-
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual(2, csv.FieldCount);
 				Assert.AreEqual("a", csv[0]);
@@ -1320,10 +1320,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		[Test]
 		public void SkipEmptyLinesTest1()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader("00\n\n10"), false))
+			using (CsvReader csv = new CsvReader(new StringReader("00\n\n10"), CsvReader.DefaultBufferSize, new CsvLayout(hasHeaders:false), new CsvBehaviour(skipEmptyLines:false)))
 			{
-				csv.SkipEmptyLines = false;
-
 				Assert.AreEqual(1, csv.FieldCount);
 
 				Assert.IsTrue(csv.ReadNextRecord());
@@ -1342,10 +1340,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		[Test]
 		public void SkipEmptyLinesTest2()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader("00\n\n10"), false))
+			using (CsvReader csv = new CsvReader(new StringReader("00\n\n10"), CsvReader.DefaultBufferSize, new CsvLayout(),new CsvBehaviour(skipEmptyLines:true) ))
 			{
-				csv.SkipEmptyLines = true;
-
 				Assert.AreEqual(1, csv.FieldCount);
 
 				Assert.IsTrue(csv.ReadNextRecord());

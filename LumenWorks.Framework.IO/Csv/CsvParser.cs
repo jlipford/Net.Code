@@ -21,8 +21,6 @@ namespace LumenWorks.Framework.IO.Csv
         public int LineNumber { get; set; }
         public int ColumnNumber { get; set; }
         private int? _fieldCount;
-        private MissingFieldAction _missingFieldAction;
-        private bool _skipEmptyLines = true;
         private CsvLine _cachedLine;
         private bool _initialized;
         private CsvHeader _header;
@@ -69,7 +67,7 @@ namespace LumenWorks.Framework.IO.Csv
                 var readLine = _textReader.ReadLine();
 
 
-                if (string.IsNullOrEmpty(readLine) && _skipEmptyLines) continue;
+                if (string.IsNullOrEmpty(readLine) && Behaviour.SkipEmptyLines) continue;
                 if (readLine != null && readLine.StartsWith(new string(Layout.Comment, 1))) continue;
 
                 var fields = readLine.Split(Layout, Behaviour).ToList();
@@ -80,9 +78,9 @@ namespace LumenWorks.Framework.IO.Csv
 
                 if (count < _fieldCount)
                 {
-                    if (_missingFieldAction == MissingFieldAction.ParseError) 
+                    if (Behaviour.MissingFieldAction == MissingFieldAction.ParseError) 
                         throw new MissingFieldCsvException(readLine, 0, LineNumber - 1, fields.Count() - 1);
-                    string s = _missingFieldAction == MissingFieldAction.ReplaceByEmpty ? "" : null;
+                    string s = Behaviour.MissingFieldAction == MissingFieldAction.ReplaceByEmpty ? "" : null;
                     fields = fields.Concat(Enumerable.Repeat(s, _fieldCount.Value - count)).ToList();
                 }
 
@@ -131,14 +129,5 @@ namespace LumenWorks.Framework.IO.Csv
             _disposed = true;
         }
 
-        public void SetMissingFieldAction(MissingFieldAction value)
-        {
-            _missingFieldAction = value;
-        }
-
-        public void SkipEmptyLines(bool value)
-        {
-            _skipEmptyLines = value;
-        }
     }
 }
