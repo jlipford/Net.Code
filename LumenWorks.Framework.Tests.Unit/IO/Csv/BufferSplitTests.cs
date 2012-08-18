@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using LumenWorks.Framework.IO.Csv;
@@ -10,12 +11,18 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 	[TestFixture]
 	public class BufferSplitTests
 	{
-
+        private static IEnumerable<string> Split(string line, CsvLayout splitLineParams)
+        {
+            var splitter = new BufferSplit(new StringReader(line), splitLineParams);
+            var result = splitter.Split();
+            return result.First();
+        }
+        
 		[Test]
 		public void SplitsSimpleDelimitedLine()
 		{
-			var splitLineParams = new CsvLayout('"', ';');
-			var result = "1;2;3".Split(splitLineParams);
+            var splitLineParams = new CsvLayout('"', ';');
+			var result = Split("1;2;3", splitLineParams);
 			CollectionAssert.AreEqual(new[]{"1", "2", "3"}, result);
 		}
 
@@ -23,7 +30,7 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		public void TrimsTrailingWhitespaceOfUnquotedField()
 		{
 			var splitLineParams = new CsvLayout('"', ';');
-			var result = "1;2;3 \t".Split(splitLineParams);
+			var result = Split("1;2;3 \t", splitLineParams);
 			CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result);
 		}
 
@@ -31,7 +38,7 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		public void DoesNotTrimTrailingWhitespaceOfQuotedField()
 		{
 			var splitLineParams = new CsvLayout('"', ';');
-			var result = "1;2;\"3 \t\"".Split(splitLineParams);
+            var result = Split("1;2;\"3 \t\"", splitLineParams);
 			CollectionAssert.AreEqual(new[] { "1", "2", "3 \t" }, result);
 		}
 
@@ -40,17 +47,17 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		{
 			const string line = @"""FieldContent""";
 			var splitLineParams = new CsvLayout('"', ',');
-			var result = line.Split(splitLineParams);
+			var result = Split(line, splitLineParams);
 			CollectionAssert.AreEqual(new[]{"FieldContent"}, result);
 		}
 
-		[Test]
+	    [Test]
 		public void TrimsLeadingWhitespaceFromUnquotedField()
 		{
 			const string line = @"x, y,z";
 			var splitLineParams = new CsvLayout('"', ',');
-			var result = line.Split(splitLineParams);
-			CollectionAssert.AreEqual(new[] { "x", "y", "z" }, result);
+            var result = Split(line, splitLineParams);
+            CollectionAssert.AreEqual(new[] { "x", "y", "z" }, result);
 		}
 
 		[Test]
@@ -58,8 +65,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		{
 			const string line = @"x,y   ,z";
 			var splitLineParams = new CsvLayout('"', ',');
-			var result = line.Split(splitLineParams);
-			CollectionAssert.AreEqual(new[] { "x", "y", "z" }, result);
+            var result = Split(line, splitLineParams);
+            CollectionAssert.AreEqual(new[] { "x", "y", "z" }, result);
 		}
 
 		[Test]
@@ -67,8 +74,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		{
 			const string line = "x \"y\",z";
 			var splitLineParams = new CsvLayout('"', ',');
-			var result = line.Split(splitLineParams);
-			CollectionAssert.AreEqual(new[] { "x \"y\"", "z" }, result);
+            var result = Split(line, splitLineParams);
+            CollectionAssert.AreEqual(new[] { "x \"y\"", "z" }, result);
 		}
 
 		[Test]
@@ -76,55 +83,56 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		{
 			const string line = @",x,,y";
 			var splitLineParams = new CsvLayout('"', ',');
-			var result = line.Split(splitLineParams);
-			CollectionAssert.AreEqual(new[] { "", "x", "", "y" }, result);
+            var result = Split(line, splitLineParams);
+            CollectionAssert.AreEqual(new[] { "", "x", "", "y" }, result);
 		}
 
 		[Test]
 		public void QuotedStringWithDelimiter()
 		{
-			const string line = "\"x \"\"y\"\", z\",u";
+            // "x ""y"", z"
+			const string line = "\"x \"y\" z, u\",v";
 			var splitLineParams = new CsvLayout('"', ',');
-			var result = line.Split(splitLineParams);
-			CollectionAssert.AreEqual(new[] { "x \"y\", z", "u" }, result);
+            var result = Split(line, splitLineParams);
+            CollectionAssert.AreEqual(new[] { "x \"y\" z, u", "v" }, result);
 
 		}
 
 		[Test]
 		public void WhenValueTrimmingIsNone_LastFieldWithLeadingAndTrailingWhitespace_WhitespaceIsNotTrimmed()
 		{
-			const string data = "x,y, z ";
+			const string line = "x,y, z ";
 			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '"');
-			var result = data.Split(splitLineParams);
-			CollectionAssert.AreEqual(new[]{@"x", "y", " z "}, result);
+            var result = Split(line, splitLineParams);
+            CollectionAssert.AreEqual(new[] { @"x", "y", " z " }, result);
 
 		}
 
 		[Test]
 		public void CarriageReturnCanBeUsedAsDelimiter()
 		{
-			const string data = "1\r2\n";
+			const string line = "1\r2\n";
 			var splitLineParams = new CsvLayout('"', '\r');
-			var result = data.Split(splitLineParams);
-			CollectionAssert.AreEqual(new[]{"1", "2"}, result);
+            var result = Split(line, splitLineParams);
+            CollectionAssert.AreEqual(new[] { "1", "2" }, result);
 		}
 
 		[Test]
 		public void EscapeCharacterInsideQuotedStringIsEscaped()
 		{
-			const string data = "\"\\\\\"";
+			const string line = "\"\\\\\"";
 			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '\\');
-			var result = data.Split(splitLineParams);
-			Assert.AreEqual("\\", result.Single());
+            var result = Split(line, splitLineParams);
+            Assert.AreEqual("\\", result.Single());
 		}
 
 		[Test]
 		public void LineWithOnlySeparatorIsSplitIntoTwoEmptyStrings()
 		{
-			const string data = ",";
+			const string line = ",";
 			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '\\');
-			var result = data.Split(splitLineParams);
-			CollectionAssert.AreEqual(new[]{"",""}, result);
+            var result = Split(line, splitLineParams);
+            CollectionAssert.AreEqual(new[] { "", "" }, result);
 		}
 
 		[Test]
@@ -133,10 +141,89 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			const string data = @"a,b,""line1
 line2""";
 			var splitLineParams = new CsvLayout('"', ',', ValueTrimmingOptions.None, '\\');
-			var result = data.Split(splitLineParams);
-			CollectionAssert.AreEqual(new[] { "a", "b", @"line1
+            var result = Split(data, splitLineParams);
+            CollectionAssert.AreEqual(new[] { "a", "b", @"line1
 line2" }, result);
 		}
+
+        [Test]
+        public void MultipleLinesAreSplitCorrectly()
+        {
+            var data1 = @"1;2;3
+4;5;6";
+
+            var csvLayout = new CsvLayout('\"', ';');
+
+            var splitter = new BufferSplit(new StringReader(data1), csvLayout);
+
+            var result = splitter.Split().ToArray();
+
+            CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result[0]);
+            CollectionAssert.AreEqual(new[] { "4", "5", "6" }, result[1]);
+
+        }
+
+        [Test]
+        public void WorksWithQuotedStringInsideQuotedFieldButOnlyWhitespaceAfterSecondQuote()
+        {
+            var data1 = @"""1"";"" 2  ""inside""   "";3";
+
+            var csvLayout = new CsvLayout('\"', ';');
+
+            var splitter = new BufferSplit(new StringReader(data1), csvLayout);
+
+            var result = splitter.Split().ToArray();
+
+            CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""   ", "3" }, result[0]);
+
+        }
+
+        [Test]
+        public void WorksWithQuotedStringInsideQuotedField()
+        {
+            var data1 = @"""1"";"" 2  ""inside""  x "";3";
+
+            var csvLayout = new CsvLayout('\"', ';');
+
+            var splitter = new BufferSplit(new StringReader(data1), csvLayout);
+
+            var result = splitter.Split().ToArray();
+
+            CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""  x ", "3" }, result[0]);
+
+        }
+
+        [Test]
+        public void WorksWithQuotedMultilineString()
+        {
+            var data1 = @"""1"";"" 2  ""in
+side""  x "";3";
+
+            var csvLayout = new CsvLayout('\"', ';');
+
+            var splitter = new BufferSplit(new StringReader(data1), csvLayout);
+
+            var result = splitter.Split().ToArray();
+
+            CollectionAssert.AreEqual(new[] { "1", @" 2  ""in
+side""  x ", "3" }, result[0]);
+
+        }
+
+        [Test]
+        public void SampleDataSplitTest()
+        {
+            var data = CsvReaderSampleData.SampleData1;
+
+            var splitter = new BufferSplit(new StringReader(data), new CsvLayout());
+
+            var result = splitter.Split().ToArray();
+
+            CsvReaderSampleData.CheckSampleData1(false, 0, result[0]);
+
+        }
+
+
 
 	}
 }

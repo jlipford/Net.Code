@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LumenWorks.Framework.IO.Csv
 {
-    class CsvLine
+    public class CsvLine
     {
         private readonly List<string> _fields = new List<string>();
 

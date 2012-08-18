@@ -6,6 +6,9 @@ namespace LumenWorks.Framework.IO.Csv
         InsideQuotedField,
         AfterSecondQuote,
         OutsideField,
-        Escaped
+        Escaped,
+        EndOfLine,
+        BeginningOfLine,
+        Comment
     }
 }

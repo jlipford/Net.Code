@@ -1,5 +1,6 @@
 namespace LumenWorks.Framework.IO.Csv
 {
+
 	public class CsvLayout
 	{
 		private readonly char _quote;
