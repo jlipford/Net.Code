@@ -69,10 +69,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Csv\CachedCsvReader.cs" />
-    <Compile Include="Csv\CachedCsvReader.CsvBindingList.cs" />
-    <Compile Include="Csv\CachedCsvReader.CsvPropertyDescriptor.cs" />
-    <Compile Include="Csv\CachedCsvReader.CsvRecordComparer.cs" />
     <Compile Include="Csv\BufferSplit.cs" />
     <Compile Include="Csv\CsvHeader.cs" />
     <Compile Include="Csv\CsvLine.cs" />
