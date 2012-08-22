@@ -50,17 +50,17 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Contains the current field index.
 		/// </summary>
-		private int _currentFieldIndex;
+		private int _fieldNumber;
 
 		/// <summary>
 		/// Contains the current record index.
 		/// </summary>
-		private long _currentRecordIndex;
+		private long _lineNumber;
 
 		/// <summary>
 		/// Contains the current position in the raw data.
 		/// </summary>
-		private int _currentPosition;
+		private int _columnNumber;
 
 		#endregion
 
@@ -94,20 +94,20 @@ namespace LumenWorks.Framework.IO.Csv
 			_message = (message == null ? string.Empty : message);
 
 			_rawData = string.Empty;
-			_currentPosition = -1;
-			_currentRecordIndex = -1;
-			_currentFieldIndex = -1;
+			_columnNumber = -1;
+			_lineNumber = -1;
+			_fieldNumber = -1;
 		}
 
 		/// <summary>
 		/// Initializes a new instance of the MalformedCsvException class.
 		/// </summary>
 		/// <param name="rawData">The raw data when the error occured.</param>
-		/// <param name="currentPosition">The current position in the raw data.</param>
-		/// <param name="currentRecordIndex">The current record index.</param>
-		/// <param name="currentFieldIndex">The current field index.</param>
-		public MalformedCsvException(string rawData, int currentPosition, long currentRecordIndex, int currentFieldIndex)
-			: this(rawData, currentPosition, currentRecordIndex, currentFieldIndex, null)
+		/// <param name="columnNumber">The current position in the raw data.</param>
+		/// <param name="lineNumber">The current record index.</param>
+		/// <param name="fieldNumber">The current field index.</param>
+		public MalformedCsvException(string rawData, int columnNumber, long lineNumber, int fieldNumber)
+			: this(rawData, columnNumber, lineNumber, fieldNumber, null)
 		{
 		}
 
@@ -115,19 +115,19 @@ namespace LumenWorks.Framework.IO.Csv
 		/// Initializes a new instance of the MalformedCsvException class.
 		/// </summary>
 		/// <param name="rawData">The raw data when the error occured.</param>
-		/// <param name="currentPosition">The current position in the raw data.</param>
-		/// <param name="currentRecordIndex">The current record index.</param>
-		/// <param name="currentFieldIndex">The current field index.</param>
+		/// <param name="columnNumber">The current position in the raw data.</param>
+		/// <param name="lineNumber">The current record index.</param>
+		/// <param name="fieldNumber">The current field index.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception.</param>
-		public MalformedCsvException(string rawData, int currentPosition, long currentRecordIndex, int currentFieldIndex, Exception innerException)
+		public MalformedCsvException(string rawData, int columnNumber, long lineNumber, int fieldNumber, Exception innerException)
 			: base(String.Empty, innerException)
 		{
 			_rawData = (rawData == null ? string.Empty : rawData);
-			_currentPosition = currentPosition;
-			_currentRecordIndex = currentRecordIndex;
-			_currentFieldIndex = currentFieldIndex;
+			_columnNumber = columnNumber;
+			_lineNumber = lineNumber;
+			_fieldNumber = fieldNumber;
 
-			_message = String.Format(CultureInfo.InvariantCulture, ExceptionMessage.MalformedCsvException, _currentRecordIndex, _currentFieldIndex, _currentPosition, _rawData);
+			_message = String.Format(CultureInfo.InvariantCulture, ExceptionMessage.MalformedCsvException, _lineNumber, _fieldNumber, _columnNumber, _rawData);
 		}
 
 		/// <summary>
@@ -141,9 +141,9 @@ namespace LumenWorks.Framework.IO.Csv
 			_message = info.GetString("MyMessage");
 
 			_rawData = info.GetString("RawData");
-			_currentPosition = info.GetInt32("CurrentPosition");
-			_currentRecordIndex = info.GetInt64("CurrentRecordIndex");
-			_currentFieldIndex = info.GetInt32("CurrentFieldIndex");
+			_columnNumber = info.GetInt32("ColumnNumber");
+			_lineNumber = info.GetInt64("LineNumber");
+			_fieldNumber = info.GetInt32("FieldNumber");
 		}
 
 		#endregion
@@ -163,27 +163,27 @@ namespace LumenWorks.Framework.IO.Csv
 		/// Gets the current position in the raw data.
 		/// </summary>
 		/// <value>The current position in the raw data.</value>
-		public int CurrentPosition
+		public int ColumnNumber
 		{
-			get { return _currentPosition; }
+			get { return _columnNumber; }
 		}
 
 		/// <summary>
 		/// Gets the current record index.
 		/// </summary>
 		/// <value>The current record index.</value>
-		public long CurrentRecordIndex
+		public long LineNumber
 		{
-			get { return _currentRecordIndex; }
+			get { return _lineNumber; }
 		}
 
 		/// <summary>
 		/// Gets the current field index.
 		/// </summary>
 		/// <value>The current record index.</value>
-		public int CurrentFieldIndex
+		public int FieldNumber
 		{
-			get { return _currentFieldIndex; }
+			get { return _fieldNumber; }
 		}
 
 		#endregion
@@ -211,9 +211,9 @@ namespace LumenWorks.Framework.IO.Csv
 			info.AddValue("MyMessage", _message);
 
 			info.AddValue("RawData", _rawData);
-			info.AddValue("CurrentPosition", _currentPosition);
-			info.AddValue("CurrentRecordIndex", _currentRecordIndex);
-			info.AddValue("CurrentFieldIndex", _currentFieldIndex);
+			info.AddValue("ColumnNumber", _columnNumber);
+			info.AddValue("LineNumber", _lineNumber);
+			info.AddValue("FieldNumber", _fieldNumber);
 		}
 
 		#endregion

@@ -71,11 +71,11 @@ namespace LumenWorks.Framework.IO.Csv
 		/// Initializes a new instance of the MissingFieldCsvException class.
 		/// </summary>
 		/// <param name="rawData">The raw data when the error occured.</param>
-		/// <param name="currentPosition">The current position in the raw data.</param>
-		/// <param name="currentRecordIndex">The current record index.</param>
-		/// <param name="currentFieldIndex">The current field index.</param>
-		public MissingFieldCsvException(string rawData, int currentPosition, long currentRecordIndex, int currentFieldIndex)
-			: base(rawData, currentPosition, currentRecordIndex, currentFieldIndex)
+		/// <param name="columnNumber">The current position in the raw data.</param>
+		/// <param name="lineNumber">The current record index.</param>
+		/// <param name="fieldNumber">The current field index.</param>
+		public MissingFieldCsvException(string rawData, int columnNumber, long lineNumber, int fieldNumber)
+			: base(rawData, columnNumber, lineNumber, fieldNumber)
 		{
 		}
 
@@ -83,12 +83,12 @@ namespace LumenWorks.Framework.IO.Csv
 		/// Initializes a new instance of the MissingFieldCsvException class.
 		/// </summary>
 		/// <param name="rawData">The raw data when the error occured.</param>
-		/// <param name="currentPosition">The current position in the raw data.</param>
-		/// <param name="currentRecordIndex">The current record index.</param>
-		/// <param name="currentFieldIndex">The current field index.</param>
+		/// <param name="columnNumber">The current position in the raw data.</param>
+		/// <param name="lineNumber">The current record index.</param>
+		/// <param name="fieldNumber">The current field index.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception.</param>
-		public MissingFieldCsvException(string rawData, int currentPosition, long currentRecordIndex, int currentFieldIndex, Exception innerException)
-			: base(rawData, currentPosition, currentRecordIndex, currentFieldIndex, innerException)
+		public MissingFieldCsvException(string rawData, int columnNumber, long lineNumber, int fieldNumber, Exception innerException)
+			: base(rawData, columnNumber, lineNumber, fieldNumber, innerException)
 		{
 		}
 

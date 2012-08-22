@@ -142,7 +142,7 @@
     <comment>index:int</comment>
   </data>
   <data name="MalformedCsvException" xml:space="preserve">
-    <value>The CSV appears to be corrupt near record '{0}' field '{1} at position '{2}'. Current raw data : '{3}'.</value>
+    <value>The CSV appears to be corrupt on line '{0}', field '{1}' at position '{2}'. Current raw data : '{3}'.</value>
     <comment>currentRecordIndex:int;currentFieldIndex:int;currentPosition:int;rawData:string</comment>
   </data>
   <data name="MissingFieldActionNotSupported" xml:space="preserve">

@@ -320,7 +320,7 @@ namespace LumenWorks.Framework.IO.Csv
             if (!line.IsEmpty && count < _fieldCount)
             {
                 if (_behaviour.MissingFieldAction == MissingFieldAction.ParseError)
-                    throw new MissingFieldCsvException(CurrentRawData, _currentPosition, LineNumber - 1, fields.Count() - 1);
+                    throw new MissingFieldCsvException(CurrentRawData, _currentColumn, LineNumber, fields.Count());
             }
 
             if (count < _fieldCount)

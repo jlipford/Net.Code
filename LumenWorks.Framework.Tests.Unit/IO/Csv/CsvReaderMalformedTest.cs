@@ -44,7 +44,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		{
 			const string Data = "a,b,c,d\n" +
 			                    "1,1,1,1\n" +
-			                    "2,\"2\"\n3,3,3,3";
+			                    "2,\"2\"\n" +
+			                    "3,3,3,3";
 
 			try
 			{
@@ -59,12 +60,9 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			}
 			catch (MissingFieldCsvException ex)
 			{
-				if (ex.CurrentRecordIndex == 2 && ex.CurrentFieldIndex == 1)
-					throw ex;
-				else
-				{
-				    Assert.Fail(string.Format("expected failure at record index 2 (was {0}), field 2 (was {1})", ex.CurrentRecordIndex, ex.CurrentFieldIndex));
-				}
+			    if (ex.LineNumber == 3 && ex.FieldNumber == 2 && ex.ColumnNumber == 5)
+					throw;
+			    Assert.Fail(string.Format("expected failure at Line number 3 (was {0}), field 2 (was {1}), column 5 (was {2})", ex.LineNumber, ex.FieldNumber, ex.ColumnNumber));
 			}
 		}
 
@@ -72,7 +70,10 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		[ExpectedException(typeof(MissingFieldCsvException))]
 		public void MissingFieldQuotedTest2()
 		{
-			const string Data = "a,b,c,d\n1,1,1,1\n2,\"2\",\n3,3,3,3";
+			const string Data = "a,b,c,d\n" +
+			                    "1,1,1,1\n" +
+			                    "2,\"2\",\n" +
+			                    "3,3,3,3";
 
 			try
 			{
@@ -87,8 +88,10 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			}
 			catch (MissingFieldCsvException ex)
 			{
-				if (ex.CurrentRecordIndex == 2)// && ex.CurrentFieldIndex == 2 && ex.CurrentPosition == 1)
+				if (ex.LineNumber == 3 && ex.FieldNumber == 3 && ex.ColumnNumber == 6)
 					throw ex;
+                Assert.Fail(string.Format("expected failure at Line number 2 (was {0}), field 3 (was {1}), column 6 (was {2})", ex.LineNumber, ex.FieldNumber, ex.ColumnNumber));
+
 			}
 		}
 
@@ -96,7 +99,10 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		[ExpectedException(typeof(MissingFieldCsvException))]
 		public void MissingFieldQuotedTest3()
 		{
-			const string Data = "a,b,c,d\n1,1,1,1\n2,\"2\"\n\"3\",3,3,3";
+			const string Data = "a,b,c,d\n" +
+			                    "1,1,1,1\n" +
+			                    "2,\"2\"\n" +
+			                    "\"3\",3,3,3";
 
 			try
 			{
@@ -111,9 +117,10 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			}
 			catch (MissingFieldCsvException ex)
 			{
-				if (ex.CurrentRecordIndex == 2)// && ex.CurrentFieldIndex == 2 && ex.CurrentPosition == 22)
-					throw ex;
-			}
+				if (ex.LineNumber == 3 && ex.FieldNumber == 2 && ex.ColumnNumber == 5)
+					throw;
+                Assert.Fail(string.Format("expected failure at Line number 3 (was {0}), field 2 (was {1}), column 5 (was {2})", ex.LineNumber, ex.FieldNumber, ex.ColumnNumber));
+            }
 		}
 
 		[Test()]
@@ -138,13 +145,10 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			}
 			catch (MissingFieldCsvException ex)
 			{
-				if (ex.CurrentRecordIndex == 2 && ex.CurrentFieldIndex == 2 && ex.CurrentPosition == 6)
-					throw ex;
-                else
-                {
-                    Assert.Fail(string.Format("expected malformed csv at record index 2 (was {0}), field index 2 (was {1}) and position 6 (was {2}) (exception: {3})", ex.CurrentRecordIndex, ex.CurrentFieldIndex, ex.CurrentPosition, ex.Message));
-                }
-            }
+			    if (ex.LineNumber == 3 && ex.FieldNumber == 3 && ex.ColumnNumber == 6)
+					throw;
+			    Assert.Fail(string.Format("expected malformed csv at line 2 (was {0}), field number 2 (was {1}) and column 6 (was {2}) (exception: {3})", ex.LineNumber, ex.FieldNumber, ex.ColumnNumber, ex.Message));
+			}
 		}
 
 		[Test]
@@ -167,11 +171,11 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			}
 			catch (MalformedCsvException ex)
 			{
-				if (ex.CurrentRecordIndex == 0 && ex.CurrentFieldIndex == 1 && ex.CurrentPosition == 12)
+				if (ex.LineNumber == 0 && ex.FieldNumber == 1 && ex.ColumnNumber == 12)
 					throw ex;
 				else
 				{
-				    Assert.Fail(string.Format("Expected malformed csv at record index 0 (was {0}), field index 1 (was {1}) and position 11 (was {2}) (exception caught: {3})", ex.CurrentRecordIndex, ex.CurrentFieldIndex, ex.CurrentPosition, ex.Message));
+				    Assert.Fail(string.Format("Expected malformed csv at record index 0 (was {0}), field index 1 (was {1}) and position 11 (was {2}) (exception caught: {3})", ex.LineNumber, ex.FieldNumber, ex.ColumnNumber, ex.Message));
 				}
 			}
 		}
@@ -197,7 +201,7 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			}
 			catch (MalformedCsvException ex)
 			{
-				if (ex.CurrentRecordIndex == 1)// && ex.CurrentFieldIndex == 1 && ex.CurrentPosition == 29)
+				if (ex.LineNumber == 1)// && ex.FieldNumber == 1 && ex.ColumnNumber == 29)
 					throw ex;
 			}
 		}
