@@ -8,7 +8,7 @@ namespace LumenWorks.Framework.IO.Csv
         private readonly Dictionary<string, int> _fieldHeaderIndexes;
 
         public CsvHeader(IEnumerable<string> fields, string defaultHeaderName)
-            : base(DefaultWhereEmpty(fields, defaultHeaderName))
+            : base(DefaultWhereEmpty(fields, defaultHeaderName), false)
         {
             _fieldHeaderIndexes = Fields.Select((f, i) => new {f, i}).ToDictionary(x => x.f, x => x.i);
         }

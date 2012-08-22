@@ -39,7 +39,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// <summary>
 		/// Contains the action to take.
 		/// </summary>
-		private ParseErrorAction _action;
+		private QuotesInsideQuotedFieldAction _action;
 
 		#endregion
 
@@ -50,7 +50,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// </summary>
 		/// <param name="error">The error that occured.</param>
 		/// <param name="defaultAction">The default action to take.</param>
-		public ParseErrorEventArgs(MalformedCsvException error, ParseErrorAction defaultAction)
+		public ParseErrorEventArgs(MalformedCsvException error, QuotesInsideQuotedFieldAction defaultAction)
 			: base()
 		{
 			_error = error;
@@ -74,7 +74,7 @@ namespace LumenWorks.Framework.IO.Csv
 		/// Gets or sets the action to take.
 		/// </summary>
 		/// <value>The action to take.</value>
-		public ParseErrorAction Action
+		public QuotesInsideQuotedFieldAction Action
 		{
 			get { return _action; }
 			set { _action = value; }

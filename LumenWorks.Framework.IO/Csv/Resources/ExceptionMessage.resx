@@ -159,12 +159,12 @@
     <value>The number of fields in the record is greater than the available space from index to the end of the destination array.</value>
   </data>
   <data name="ParseErrorActionInvalidInsideParseErrorEvent" xml:space="preserve">
-    <value>'{0}' is not a valid ParseErrorAction while inside a ParseError event.</value>
-    <comment>parseErrorAction:LumenWorks.Framework.IO.Csv.ParseErrorAction</comment>
+    <value>'{0}' is not a valid QuotesInsideQuotedFieldAction while inside a ParseError event.</value>
+    <comment>parseErrorAction:LumenWorks.Framework.IO.Csv.QuotesInsideQuotedFieldAction</comment>
   </data>
   <data name="ParseErrorActionNotSupported" xml:space="preserve">
-    <value>'{0}' is not a supported ParseErrorAction.</value>
-    <comment>parseErrorAction:LumenWorks.Framework.IO.Csv.ParseErrorAction</comment>
+    <value>'{0}' is not a supported QuotesInsideQuotedFieldAction.</value>
+    <comment>parseErrorAction:LumenWorks.Framework.IO.Csv.QuotesInsideQuotedFieldAction</comment>
   </data>
   <data name="ReaderClosed" xml:space="preserve">
     <value>This operation is invalid when the reader is closed.</value>

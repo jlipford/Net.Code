@@ -9,6 +9,7 @@ namespace LumenWorks.Framework.IO.Csv
         Escaped,
         EndOfLine,
         BeginningOfLine,
-        Comment
+        Comment,
+        ParseError
     }
 }

@@ -20,13 +20,22 @@ namespace LumenWorks.Framework.IO.Csv
         private readonly CsvBehaviour _behaviour;
         private bool _disposed;
         private int _lineNumber;
+        private int? _fieldCount;
+        private int _currentPosition;
+        private int _currentColumn;
 
         public BufferSplit(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
+            : this(textReader, 16, csvLayout, behaviour)
+        {
+            
+        }   
+
+        public BufferSplit(TextReader textReader, int bufferSize, CsvLayout csvLayout, CsvBehaviour behaviour)
         {
             _textReader = textReader;
             _csvLayout = csvLayout;
             _behaviour = behaviour;
-            _buffer = new char[4];
+            _buffer = new char[bufferSize];
         }
 
         public int LineNumber
@@ -34,7 +43,20 @@ namespace LumenWorks.Framework.IO.Csv
             get { return _lineNumber; }
         }
 
-        string Yield(StringBuilder builder, bool quoted)
+        public string CurrentRawData
+        {
+            get { return new string(_buffer); }
+        }
+
+        public int? FieldCount
+        {
+            get
+            {
+                return _fieldCount;
+            }
+        }
+
+        string CreateField(StringBuilder builder, bool quoted)
         {
             var result = builder.ToString();
             if (_behaviour.TrimmingOptions == ValueTrimmingOptions.All
@@ -44,25 +66,36 @@ namespace LumenWorks.Framework.IO.Csv
             return result;
         }
 
-        public IEnumerable<string[]> Split()
+        public IEnumerable<CsvLine> Split()
+        {
+            return SplitPrivate().Where(line => !line.IsEmpty || !_behaviour.SkipEmptyLines);
+        }
+
+        private IEnumerable<CsvLine> SplitPrivate()
         {
 
             var fields = new List<string>();
 
             Func<char?> peekNext = () =>
                                     {
-                                        if (_idx + 1 >= _buffer.Length) return null;
+                                        if (_idx + 1 >= _buffer.Length)
+                                        {
+                                            int peek = _textReader.Peek();
+                                            return peek < 0 ? null : (char?)peek;
+                                        }
                                         return _buffer[_idx + 1];
                                     };
 
             StartLine();
+
+            bool lastCharWasDelimiter = false;
 
             while (_textReader.Peek() > 0)
             {
 
                 var charsRead = _textReader.ReadBlock(_buffer, 0, _buffer.Length);
                 _idx = 0;
-
+                _currentPosition = 0;
                 while (_idx < charsRead)
                 {
                     char currentChar = _buffer[_idx];
@@ -70,6 +103,12 @@ namespace LumenWorks.Framework.IO.Csv
                     switch (_whereAmI)
                     {
                         case Location.BeginningOfLine:
+                            _currentColumn = 0;
+                            if (currentChar == _csvLayout.Delimiter)
+                            {
+                                _whereAmI = Location.InsideField;
+                                continue;
+                            }
                             if (currentChar == '\r' || currentChar == '\n')
                             {
                                 _whereAmI = Location.EndOfLine;
@@ -85,15 +124,16 @@ namespace LumenWorks.Framework.IO.Csv
                             }
                             break;
                         case Location.OutsideField:
-                            if (char.IsWhiteSpace(currentChar))
-                            {
-                                _mayHaveToBeAdded.Append(currentChar);
-                                break;
-                            }
                             if (currentChar == '\r' || currentChar == '\n')
                             {
                                 _whereAmI = Location.EndOfLine;
                                 continue;
+                            }
+
+                            if (char.IsWhiteSpace(currentChar))
+                            {
+                                _mayHaveToBeAdded.Append(currentChar);
+                                break;
                             }
 
                             if (currentChar == _csvLayout.Quote)
@@ -111,12 +151,20 @@ namespace LumenWorks.Framework.IO.Csv
                             }
                             break;
                         case Location.EndOfLine:
-                            if (currentChar == '\r' && peekNext() == '\n') _idx++;
+                            if (currentChar == '\r' && peekNext() == '\n')
+                            {
+                                _idx++;
+                                _currentPosition++;
+                                _currentColumn++;
+                            }
+
                             if (_field.Length > 0 || fields.Count > 0)
                             {
-                                fields.Add(Yield(_field, _wasQuoted));
-                                yield return fields.ToArray();
+                                if (_field.Length > 0 || lastCharWasDelimiter)
+                                    fields.Add(CreateField(_field, _wasQuoted));
                             }
+                            var line = CreateLine(fields);
+                            yield return line;
                             fields.Clear();
                             StartLine();
                             break;
@@ -158,7 +206,7 @@ namespace LumenWorks.Framework.IO.Csv
                             {
                                 // the second quote did mark the end of the field
                                 _mayHaveToBeAdded.Length = 0;
-                                fields.Add(Yield(_field, _wasQuoted));
+                                fields.Add(CreateField(_field, _wasQuoted));
                                 _field.Length = 0;
                                 _wasQuoted = false;
                                 if (currentChar == '\r' || currentChar == '\n')
@@ -183,14 +231,40 @@ namespace LumenWorks.Framework.IO.Csv
                             if (!char.IsWhiteSpace(currentChar))
                             {
                                 // the second quote did NOT mark the end of the field, so we're still 'inside' the field
+                            
+                                if (_behaviour.QuotesInsideQuotedFieldAction == QuotesInsideQuotedFieldAction.ThrowException)
+                                    throw new MalformedCsvException(new string(_buffer), _idx, LineNumber-1, fields.Count);
+
+                                if (_behaviour.QuotesInsideQuotedFieldAction == QuotesInsideQuotedFieldAction.AdvanceToNextLine)
+                                {
+                                    _whereAmI = Location.ParseError;
+                                    break;
+                                }
+
                                 _field.Append(_mayHaveToBeAdded);
                                 _whereAmI = Location.InsideQuotedField;
+                            }
+                            break;
+                        case Location.ParseError :
+                            if (currentChar == '\r' || currentChar == '\n')
+                            {
+                                if (peekNext() == '\r' || peekNext() == '\n')
+                                {
+                                    _idx++;
+                                    _currentPosition++;
+                                    _currentColumn++;
+                                }
+                                fields.Clear();
+                                _mayHaveToBeAdded.Length = 0;
+                                _field.Length = 0;
+                                _whereAmI = Location.BeginningOfLine;
+                                continue;
                             }
                             break;
                         case Location.InsideField:
                             if (currentChar == _csvLayout.Delimiter)
                             {
-                                fields.Add(Yield(_field, _wasQuoted));
+                                fields.Add(CreateField(_field, _wasQuoted));
                                 _field.Length = 0;
                                 _whereAmI = Location.OutsideField;
                                 break;
@@ -204,27 +278,58 @@ namespace LumenWorks.Framework.IO.Csv
                             break;
                     }
                     _idx++;
+                    _currentPosition++;
+                    _currentColumn++;
                     if (_whereAmI == Location.EndOfLine)
                     {
                         break;
+                    }
+
+                    if (!lastCharWasDelimiter || !Char.IsWhiteSpace(currentChar))
+                    {
+                        lastCharWasDelimiter = currentChar == _csvLayout.Delimiter;
                     }
                 }
 
 
                 if (_whereAmI == Location.EndOfLine)
                 {
-                    var line = fields.ToArray();
+                    var line = CreateLine(fields);
                     yield return line;
                 }
             }
 
             if (_whereAmI != Location.EndOfLine)
             {
-                fields.Add(Yield(_field, _wasQuoted));
-                yield return fields.ToArray();
+                fields.Add(CreateField(_field, _wasQuoted));
+                var line = CreateLine(fields);
+                yield return line;
+            }
+        }
+
+        private CsvLine CreateLine(List<string> fields)
+        {
+            bool isEmpty = fields.Count == 0 || (fields.Count == 1 && string.IsNullOrEmpty(fields[0]));
+            var line = new CsvLine(fields, isEmpty);
+
+            if (!_fieldCount.HasValue && (!line.IsEmpty || !_behaviour.SkipEmptyLines))
+                _fieldCount = fields.Count;
+
+            var count = fields.Count();
+
+            if (!line.IsEmpty && count < _fieldCount)
+            {
+                if (_behaviour.MissingFieldAction == MissingFieldAction.ParseError)
+                    throw new MissingFieldCsvException(CurrentRawData, _currentPosition, LineNumber - 1, fields.Count() - 1);
             }
 
-
+            if (count < _fieldCount)
+            {
+                string s = _behaviour.MissingFieldAction == MissingFieldAction.ReplaceByNull ? null : "";
+                while (fields.Count < _fieldCount) fields.Add(s);
+                line = new CsvLine(fields, isEmpty);
+            }
+            return line;
         }
 
         private void StartLine()
@@ -245,7 +350,7 @@ namespace LumenWorks.Framework.IO.Csv
 
         public IEnumerator<CsvLine> GetEnumerator()
         {
-            return Split().Select(x=>new CsvLine(x)).GetEnumerator();
+            return Split().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

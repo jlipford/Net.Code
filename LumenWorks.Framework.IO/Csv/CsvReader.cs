@@ -97,7 +97,7 @@ namespace LumenWorks.Framework.IO.Csv
         /// <summary>
         /// Contains the default action to take when a parsing error has occured.
         /// </summary>
-        private ParseErrorAction _defaultParseErrorAction;
+        private QuotesInsideQuotedFieldAction _defaultQuotesInsideQuotedFieldAction;
 
         #endregion
 
@@ -306,33 +306,12 @@ namespace LumenWorks.Framework.IO.Csv
             }
 
             _currentRecordIndex = -1;
-            _defaultParseErrorAction = ParseErrorAction.RaiseEvent;
+            _defaultQuotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore;
 
             _csvLayout = layout;
             _behaviour = behaviour;
-            _parser = new CsvParser(reader, _csvLayout, _behaviour);
+            _parser = new CsvParser(reader, bufferSize, _csvLayout, _behaviour);
             _enumerator = _parser.GetEnumerator();
-        }
-
-        #endregion
-
-        #region Events
-
-        /// <summary>
-        /// Occurs when there is an error while parsing the CSV stream.
-        /// </summary>
-        public event EventHandler<ParseErrorEventArgs> ParseError;
-
-        /// <summary>
-        /// Raises the <see cref="ParseError"/> event.
-        /// </summary>
-        /// <param name="e">The <see cref="ParseErrorEventArgs"/> that contains the event data.</param>
-        protected virtual void OnParseError(ParseErrorEventArgs e)
-        {
-            EventHandler<ParseErrorEventArgs> handler = ParseError;
-
-            if (handler != null)
-                handler(this, e);
         }
 
         #endregion
@@ -428,15 +407,15 @@ namespace LumenWorks.Framework.IO.Csv
         /// Gets or sets the default action to take when a parsing error has occured.
         /// </summary>
         /// <value>The default action to take when a parsing error has occured.</value>
-        public ParseErrorAction DefaultParseErrorAction
+        public QuotesInsideQuotedFieldAction DefaultQuotesInsideQuotedFieldAction
         {
             get
             {
-                return _defaultParseErrorAction;
+                return _behaviour.QuotesInsideQuotedFieldAction;
             }
             set
             {
-                _defaultParseErrorAction = value;
+                _behaviour.QuotesInsideQuotedFieldAction = value;
             }
         }
 
@@ -899,6 +878,8 @@ namespace LumenWorks.Framework.IO.Csv
                 _currentRecordIndex++;
                 return true;
             }
+
+            _line = null;
 
             if (!ReadLine()) return false;
 

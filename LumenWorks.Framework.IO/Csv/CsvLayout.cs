@@ -32,6 +32,8 @@ namespace LumenWorks.Framework.IO.Csv
         {
             get { return _skipEmptyLines; }
         }
+
+        public QuotesInsideQuotedFieldAction QuotesInsideQuotedFieldAction { get; set; }
     }
 
     public class CsvLayout

@@ -20,7 +20,7 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
         {
             var splitter = new BufferSplit(new StringReader(line), splitLineParams, behaviour);
             var result = splitter.Split();
-            return result.First();
+            return result.First().Fields;
         }
         
 		[Test]
@@ -163,8 +163,8 @@ line2" }, result);
 
             var result = splitter.Split().ToArray();
 
-            CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result[0]);
-            CollectionAssert.AreEqual(new[] { "4", "5", "6" }, result[1]);
+            CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result[0].Fields);
+            CollectionAssert.AreEqual(new[] { "4", "5", "6" }, result[1].Fields);
 
         }
 
@@ -179,7 +179,7 @@ line2" }, result);
 
             var result = splitter.Split().ToArray();
 
-            CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""   ", "3" }, result[0]);
+            CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""   ", "3" }, result[0].Fields);
 
         }
 
@@ -194,7 +194,7 @@ line2" }, result);
 
             var result = splitter.Split().ToArray();
 
-            CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""  x ", "3" }, result[0]);
+            CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""  x ", "3" }, result[0].Fields);
 
         }
 
@@ -211,8 +211,74 @@ side""  x "";3";
             var result = splitter.Split().ToArray();
 
             CollectionAssert.AreEqual(new[] { "1", @" 2  ""in
-side""  x ", "3" }, result[0]);
+side""  x ", "3" }, result[0].Fields);
 
+        }
+
+        [Test]
+        public void WhenSkipEmptyLinesIsFalse_ReturnsEmptyLines()
+        {
+            var input = "1\n\n2";
+            var splitter = new BufferSplit(new StringReader(input), new CsvLayout(),
+                                           new CsvBehaviour(skipEmptyLines: false));
+
+            var result = splitter.Split().ToArray();
+
+            Assert.IsTrue(result[1].IsEmpty);
+        }
+
+        [Test]
+        public void WhenSkipEmptyLinesIsTrue_SkipsEmptyLines()
+        {
+            var input = "\r\n1\n\n2";
+            var splitter = new BufferSplit(new StringReader(input), new CsvLayout(),
+                                           new CsvBehaviour(skipEmptyLines: true));
+
+            var result = splitter.Split().ToArray();
+
+            Assert.AreEqual("1", result[0].Fields[0]);
+            Assert.AreEqual("2", result[1].Fields[0]);
+        }
+
+        [Test]
+        public void WhenSkipEmptyLinesIsFalse_AndEmptyLineIsAtTheEnd_ReturnsEmptyLine()
+        {
+            var input = "a,b\n   ";
+            var splitter = new BufferSplit(new StringReader(input), new CsvLayout(), new CsvBehaviour(skipEmptyLines:false));
+            
+            var result = splitter.Split().ToArray();
+
+            Assert.AreEqual(2, result.Count());
+            CollectionAssert.AreEqual(new[] { "a", "b" }, result[0].Fields);
+            Assert.IsTrue(result[1].IsEmpty);
+            CollectionAssert.AreEqual(new[] { "", string.Empty }, result[1].Fields);
+        }
+
+        [Test]
+        public void WhenInputContainsMultipleLinesWithTrailingEmptyField_ReturnsLinesWithEmptyField()
+        {
+            var input = "00,01,   \n10,11,   ";
+            var splitter = new BufferSplit(new StringReader(input), new CsvLayout(), new CsvBehaviour());
+            var result = splitter.Split().ToArray();
+            Assert.AreEqual(2, result.Count());
+            CollectionAssert.AreEqual(new[] { "00", "01", "" }, result[0].Fields);
+            CollectionAssert.AreEqual(new[] { "10", "11", "" }, result[1].Fields);
+        }
+
+        [Test]
+        public void WNhenTrailingLineContainsMissingFields_MissingFieldActionIsReplaceByNull_LastLineIsAppendedWithNulls()
+        {
+            var input = "a,b,c,d,e"
+                        + "\na,b,c,d,"
+                        + "\na,b,";
+
+            var splitter = new BufferSplit(new StringReader(input), new CsvLayout(), new CsvBehaviour(missingFieldAction: MissingFieldAction.ReplaceByNull));
+            var result = splitter.Split().ToArray();
+            Assert.AreEqual(3, result.Count());
+
+            CollectionAssert.AreEqual(new[] { "a", "b", "c", "d", "e"  }, result[0].Fields);
+            CollectionAssert.AreEqual(new[] { "a", "b", "c", "d", "" }, result[1].Fields);
+            CollectionAssert.AreEqual(new[] { "a", "b", "", null, null }, result[2].Fields);
         }
 
         [Test]
@@ -224,7 +290,7 @@ side""  x ", "3" }, result[0]);
 
             var result = splitter.Split().ToArray();
 
-            CsvReaderSampleData.CheckSampleData1(false, 0, result[0]);
+            CsvReaderSampleData.CheckSampleData1(false, 0, result[0].Fields);
 
         }
 

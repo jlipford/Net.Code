@@ -86,14 +86,16 @@
     <Compile Include="Csv\LineSplit.cs" />
     <Compile Include="Csv\Location.cs" />
     <Compile Include="Csv\MissingFieldAction.cs" />
-    <Compile Include="Csv\ParseErrorAction.cs" />
+    <Compile Include="Csv\QuotesInsideQuotedFieldAction.cs" />
     <Compile Include="Csv\Resources\ExceptionMessage.Designer.cs" />
     <Compile Include="Csv\CsvLayout.cs" />
     <Compile Include="Csv\ValueTrimmingOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Csv\Resources\ExceptionMessage.resx" />
+    <EmbeddedResource Include="Csv\Resources\ExceptionMessage.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="LumenWorks.Framework.snk" />

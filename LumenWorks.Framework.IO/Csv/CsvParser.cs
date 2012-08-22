@@ -8,23 +8,24 @@ namespace LumenWorks.Framework.IO.Csv
 {
     class CsvParser : IEnumerable<CsvLine>, IDisposable
     {
-        private readonly TextReader _textReader;
+        private readonly BufferSplit _bufferSplit;
         private bool _disposed;
 
-        public CsvParser(TextReader textReader, CsvLayout layOut, CsvBehaviour behaviour)
+        public CsvParser(TextReader textReader, int bufferSize, CsvLayout layOut, CsvBehaviour behaviour)
         {
-            _textReader = textReader;
+            _bufferSplit = new BufferSplit(textReader, bufferSize, layOut, behaviour);
+            _enumerator = _bufferSplit.GetEnumerator();
             Layout = layOut;
             Behaviour = behaviour;
         }
 
         public int LineNumber { get; set; }
         public int ColumnNumber { get; set; }
-        private int? _fieldCount;
         private CsvLine _cachedLine;
         private bool _initialized;
         private CsvHeader _header;
         private string _defaultHeaderName = "Column";
+        private IEnumerator<CsvLine> _enumerator;
 
         public CsvLayout Layout { get; private set; }
 
@@ -42,7 +43,7 @@ namespace LumenWorks.Framework.IO.Csv
 
         public int FieldCount
         {
-            get { return _fieldCount??-1; }
+            get { return _bufferSplit.FieldCount??-1; }
         }
 
         public string DefaultHeaderName
@@ -61,38 +62,14 @@ namespace LumenWorks.Framework.IO.Csv
                 _cachedLine = null;
             }
 
-            while (_textReader.Peek() > 0)
+            while (_enumerator.MoveNext())
             {
                 LineNumber++;
-                var readLine = _textReader.ReadLine();
 
+                var readLine = _enumerator.Current;
 
-                if (string.IsNullOrEmpty(readLine) && Behaviour.SkipEmptyLines) continue;
-                if (readLine != null && readLine.StartsWith(new string(Layout.Comment, 1))) continue;
+                yield return readLine;
 
-                var fields = readLine.Split(Layout, Behaviour).ToList();
-
-                if (!_fieldCount.HasValue) _fieldCount = fields.Count();
-
-                var count = fields.Count();
-
-                if (count < _fieldCount)
-                {
-                    if (Behaviour.MissingFieldAction == MissingFieldAction.ParseError) 
-                        throw new MissingFieldCsvException(readLine, 0, LineNumber - 1, fields.Count() - 1);
-                    string s = Behaviour.MissingFieldAction == MissingFieldAction.ReplaceByEmpty ? "" : null;
-                    fields = fields.Concat(Enumerable.Repeat(s, _fieldCount.Value - count)).ToList();
-                }
-
-
-                if (string.IsNullOrEmpty(readLine))
-                {
-                    yield return CsvLine.Empty;
-                }
-                else
-                {
-                    yield return new CsvLine(fields);
-                }
             }
         }
 
@@ -125,7 +102,7 @@ namespace LumenWorks.Framework.IO.Csv
         public void Dispose()
         {
             if (_disposed) return;
-            _textReader.Dispose();
+            _bufferSplit.Dispose();
             _disposed = true;
         }
 

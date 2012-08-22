@@ -37,151 +37,14 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 	[TestFixture()]
 	public class CsvReaderMalformedTest
 	{
-		#region Utilities
 
-		private void CheckMissingFieldUnquoted(long recordCount, int fieldCount, long badRecordIndex, int badFieldIndex, int bufferSize)
-		{
-			CheckMissingFieldUnquoted(recordCount, fieldCount, badRecordIndex, badFieldIndex, bufferSize, true, MissingFieldAction.ParseError);
-			CheckMissingFieldUnquoted(recordCount, fieldCount, badRecordIndex, badFieldIndex, bufferSize, true, MissingFieldAction.ReplaceByEmpty);
-			CheckMissingFieldUnquoted(recordCount, fieldCount, badRecordIndex, badFieldIndex, bufferSize, true, MissingFieldAction.ReplaceByNull);
-
-			CheckMissingFieldUnquoted(recordCount, fieldCount, badRecordIndex, badFieldIndex, bufferSize, false, MissingFieldAction.ParseError);
-			CheckMissingFieldUnquoted(recordCount, fieldCount, badRecordIndex, badFieldIndex, bufferSize, false, MissingFieldAction.ReplaceByEmpty);
-			CheckMissingFieldUnquoted(recordCount, fieldCount, badRecordIndex, badFieldIndex, bufferSize, false, MissingFieldAction.ReplaceByNull);
-		}
-
-		private void CheckMissingFieldUnquoted(long recordCount, int fieldCount, long badRecordIndex, int badFieldIndex, int bufferSize, bool sequentialAccess, MissingFieldAction action)
-		{
-			// construct the csv data with template "00,01,02\n10,11,12\n...." and calculate expected error position
-
-			long capacity = recordCount * (fieldCount * 2 + fieldCount - 1) + recordCount;
-			Assert.IsTrue(capacity <= int.MaxValue);
-
-			StringBuilder sb = new StringBuilder((int) capacity);
-			int expectedErrorPosition = 0;
-
-			for (long i = 0; i < recordCount; i++)
-			{
-				int realFieldCount;
-
-				if (i == badRecordIndex)
-					realFieldCount = badFieldIndex;
-				else
-					realFieldCount = fieldCount;
-
-				for (int j = 0; j < realFieldCount; j++)
-				{
-					sb.Append(i);
-					sb.Append(j);
-					sb.Append(CsvReader.DefaultDelimiter);
-				}
-
-				sb.Length--;
-				sb.Append('\n');
-
-				if (i == badRecordIndex)
-				{
-					expectedErrorPosition = sb.Length % bufferSize;
-
-					// when eof is true, buffer is cleared and position is reset to 0, so exception will have CurrentPosition = 0
-					if (i == recordCount - 1)
-						expectedErrorPosition = 0;
-				}
-			}
-
-			// test csv
-
-			using (CsvReader csv = new CsvReader(new StringReader(sb.ToString()), bufferSize, new CsvLayout(hasHeaders:false), new CsvBehaviour(missingFieldAction:action)))
-			{
-				Assert.AreEqual(fieldCount, csv.FieldCount);
-
-				while (csv.ReadNextRecord())
-				{
-					Assert.AreEqual(fieldCount, csv.FieldCount);
-
-					// if not sequential, directly test the missing field
-					if (!sequentialAccess)
-						CheckMissingFieldValueUnquoted(csv, badFieldIndex, badRecordIndex, badFieldIndex, expectedErrorPosition, sequentialAccess, action);
-
-					for (int i = 0; i < csv.FieldCount; i++)
-						CheckMissingFieldValueUnquoted(csv, i, badRecordIndex, badFieldIndex, expectedErrorPosition, sequentialAccess, action);
-				}
-			}
-		}
-
-		private void CheckMissingFieldValueUnquoted(CsvReader csv, int fieldIndex, long badRecordIndex, int badFieldIndex, int expectedErrorPosition, bool sequentialAccess, MissingFieldAction action)
-		{
-			const string Message = "RecordIndex={0}; FieldIndex={1}; Position={2}; Sequential={3}; Action={4}";
-
-			// make sure s contains garbage as to not have false successes
-			string s = "asdfasdfasdf";
-
-			try
-			{
-				s = csv[fieldIndex];
-			}
-			catch (MissingFieldCsvException ex)
-			{
-				Assert.AreEqual(badRecordIndex, ex.CurrentRecordIndex, Message, ex.CurrentRecordIndex, ex.CurrentFieldIndex, ex.CurrentPosition, sequentialAccess, action);
-				Assert.IsTrue(fieldIndex >= badFieldIndex, Message, ex.CurrentRecordIndex, ex.CurrentFieldIndex, ex.CurrentPosition, sequentialAccess, action);
-				Assert.AreEqual(expectedErrorPosition, ex.CurrentPosition, Message, ex.CurrentRecordIndex, ex.CurrentFieldIndex, ex.CurrentPosition, sequentialAccess, action);
-
-				return;
-			}
-
-			if (csv.CurrentRecordIndex != badRecordIndex || fieldIndex < badFieldIndex)
-				Assert.AreEqual(csv.CurrentRecordIndex.ToString() + fieldIndex.ToString(), s, Message, csv.CurrentRecordIndex, fieldIndex, -1, sequentialAccess, action);
-			else
-			{
-				switch (action)
-				{
-					case MissingFieldAction.ReplaceByEmpty:
-						Assert.AreEqual(string.Empty, s, Message, csv.CurrentRecordIndex, fieldIndex, -1, sequentialAccess, action);
-						break;
-
-					case MissingFieldAction.ReplaceByNull:
-						Assert.IsNull(s, Message, csv.CurrentRecordIndex, fieldIndex, -1, sequentialAccess, action);
-						break;
-
-					case MissingFieldAction.ParseError:
-						Assert.Fail("Failed to throw ParseError. - " + Message, csv.CurrentRecordIndex, fieldIndex, -1, sequentialAccess, action);
-						break;
-
-					default:
-						Assert.Fail("'{0}' is not handled by this test.", action);
-						break;
-				}
-			}
-		}
-
-		#endregion
-
-		[Test, Ignore]
-		public void MissingFieldUnquotedTest1()
-		{
-			CheckMissingFieldUnquoted(4, 4, 2, 2, CsvReader.DefaultBufferSize);
-			CheckMissingFieldUnquoted(4, 4, 2, 2, CsvReader.DefaultBufferSize);
-		}
-
-		[Test, Ignore]
-		public void MissingFieldUnquotedTest2()
-		{
-			// With bufferSize = 16, faulty new line char is at the start of next buffer read
-			CheckMissingFieldUnquoted(4, 4, 2, 3, 16);
-		}
-
-		[Test, Ignore]
-		public void MissingFieldUnquotedTest3()
-		{
-			// test missing field when end of buffer has been reached
-			CheckMissingFieldUnquoted(3, 4, 2, 3, 16);
-		}
-
-		[Test()]
+		[Test]
 		[ExpectedException(typeof(MissingFieldCsvException))]
 		public void MissingFieldQuotedTest1()
 		{
-			const string Data = "a,b,c,d\n1,1,1,1\n2,\"2\"\n3,3,3,3";
+			const string Data = "a,b,c,d\n" +
+			                    "1,1,1,1\n" +
+			                    "2,\"2\"\n3,3,3,3";
 
 			try
 			{
@@ -196,8 +59,12 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			}
 			catch (MissingFieldCsvException ex)
 			{
-				if (ex.CurrentRecordIndex == 2)// && ex.CurrentFieldIndex == 2)
+				if (ex.CurrentRecordIndex == 2 && ex.CurrentFieldIndex == 1)
 					throw ex;
+				else
+				{
+				    Assert.Fail(string.Format("expected failure at record index 2 (was {0}), field 2 (was {1})", ex.CurrentRecordIndex, ex.CurrentFieldIndex));
+				}
 			}
 		}
 
@@ -253,11 +120,14 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		[ExpectedException(typeof(MissingFieldCsvException))]
 		public void MissingFieldQuotedTest4()
 		{
-			const string Data = "a,b,c,d\n1,1,1,1\n2,\"2\",\n\"3\",3,3,3";
+			const string Data = "a,b,c,d\n" +
+			                    "1,1,1,1\n" +
+			                    "2,\"2\",\n" +
+			                    "\"3\",3,3,3";
 
 			try
 			{
-				using (CsvReader csv = new CsvReader(new StringReader(Data), false, 11))
+				using (CsvReader csv = new CsvReader(new StringReader(Data), false, 16))
 				{
 					while (csv.ReadNextRecord())
 						for (int i = 0; i < csv.FieldCount; i++)
@@ -268,12 +138,16 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			}
 			catch (MissingFieldCsvException ex)
 			{
-				if (ex.CurrentRecordIndex == 2)// && ex.CurrentFieldIndex == 2 && ex.CurrentPosition == 1)
+				if (ex.CurrentRecordIndex == 2 && ex.CurrentFieldIndex == 2 && ex.CurrentPosition == 6)
 					throw ex;
-			}
+                else
+                {
+                    Assert.Fail(string.Format("expected malformed csv at record index 2 (was {0}), field index 2 (was {1}) and position 6 (was {2}) (exception: {3})", ex.CurrentRecordIndex, ex.CurrentFieldIndex, ex.CurrentPosition, ex.Message));
+                }
+            }
 		}
 
-		[Test, Ignore]
+		[Test]
 		[ExpectedException(typeof(MalformedCsvException))]
 		public void MissingDelimiterAfterQuotedFieldTest1()
 		{
@@ -283,6 +157,7 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			{
 				using (CsvReader csv = new CsvReader(new StringReader(Data), false, ',', '"', '\\', '#', ValueTrimmingOptions.UnquotedOnly))
 				{
+                    csv.DefaultQuotesInsideQuotedFieldAction  = QuotesInsideQuotedFieldAction.ThrowException;
 					while (csv.ReadNextRecord())
 						for (int i = 0; i < csv.FieldCount; i++)
 						{
@@ -292,21 +167,27 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			}
 			catch (MalformedCsvException ex)
 			{
-				if (ex.CurrentRecordIndex == 0)// && ex.CurrentFieldIndex ==1 && ex.CurrentPosition == 11)
+				if (ex.CurrentRecordIndex == 0 && ex.CurrentFieldIndex == 1 && ex.CurrentPosition == 12)
 					throw ex;
+				else
+				{
+				    Assert.Fail(string.Format("Expected malformed csv at record index 0 (was {0}), field index 1 (was {1}) and position 11 (was {2}) (exception caught: {3})", ex.CurrentRecordIndex, ex.CurrentFieldIndex, ex.CurrentPosition, ex.Message));
+				}
 			}
 		}
 
-		[Test, Ignore]
+		[Test]
 		[ExpectedException(typeof(MalformedCsvException))]
 		public void MissingDelimiterAfterQuotedFieldTest2()
 		{
-			const string Data = "\"111\",\"222\",\"333\"\n\"111\",\"222\"\"333\"";
+			const string Data = "\"111\",\"222\",\"333\"\n" +
+			                    "\"111\",\"222\"\"333\"";
 
 			try
 			{
 				using (CsvReader csv = new CsvReader(new StringReader(Data), false, ',', '"', '\\', '#', ValueTrimmingOptions.UnquotedOnly))
 				{
+                    csv.DefaultQuotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.ThrowException;
 					while (csv.ReadNextRecord())
 						for (int i = 0; i < csv.FieldCount; i++)
 						{
@@ -357,14 +238,16 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 			}
 		}
 
-		[Test, Ignore("A field with an extra quote is not considered a parsing error by the line splitting state machine")]
+		[Test]
 		public void ParseErrorBeforeInitializeTest()
 		{
-			const string Data = "\"0022 - SKABELON\";\"\"Tandremstrammer\";\"\";\"0,00\";\"\"\n\"15907\";\"\"BOLT TIL 2-05-405\";\"\";\"42,50\";\"4027816159070\"\n\"19324\";\"FJEDER TIL 2-05-405\";\"\";\"14,50\";\"4027816193241\"";
+			const string Data = "\"0022 - SKABELON\";\"\"Tandremstrammer\";\"\";\"0,00\";\"\"\n" +
+			                    "\"15907\";\"\"BOLT TIL 2-05-405\";\"\";\"42,50\";\"4027816159070\"\n" +
+			                    "\"19324\";\"FJEDER TIL 2-05-405\";\"\";\"14,50\";\"4027816193241\"";
 
 			using (var csv = new CsvReader(new System.IO.StringReader(Data), false, ';'))
 			{
-				csv.DefaultParseErrorAction = ParseErrorAction.AdvanceToNextLine;
+				csv.DefaultQuotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.AdvanceToNextLine;
 
 				Assert.IsTrue(csv.ReadNextRecord());
 
@@ -385,7 +268,8 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 				+ "\na,b,c,d,"
 				+ "\na,b,";
 
-			using (var csv = new CsvReader(new StringReader(Data), CsvReader.DefaultBufferSize, new CsvLayout(hasHeaders:false), new  CsvBehaviour(missingFieldAction:MissingFieldAction.ReplaceByNull)))
+			using (var csv = new CsvReader(new StringReader(Data), CsvReader.DefaultBufferSize, new CsvLayout(hasHeaders:false), 
+                new  CsvBehaviour(missingFieldAction:MissingFieldAction.ReplaceByNull)))
 			{
 				var record = new string[5];
 
