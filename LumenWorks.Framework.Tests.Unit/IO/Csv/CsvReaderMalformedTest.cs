@@ -213,8 +213,6 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 
 			using (CsvReader csv = new CsvReader(new System.IO.StringReader(Data), false))
 			{
-				csv.SupportsMultiline = false;
-
 				while (csv.ReadNextRecord())
 				{
 					for (int i = 0; i < csv.FieldCount; i++)

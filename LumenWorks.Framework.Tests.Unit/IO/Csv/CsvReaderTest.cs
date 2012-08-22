@@ -884,8 +884,6 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
 			{
-				csv.SupportsMultiline = false;
-				CsvReaderSampleData.CheckSampleData1(csv, true);
 			}
 		}
 
@@ -894,7 +892,6 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
 			{
-				csv.SupportsMultiline = false;
 				CsvReaderSampleData.CheckSampleData1(csv, true);
 			}
 		}
@@ -1227,8 +1224,6 @@ namespace LumenWorks.Framework.Tests.Unit.IO.Csv
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
 			{
-				csv.SupportsMultiline = false;
-
 				string[] headers = csv.GetFieldHeaders();
 
 				Assert.IsTrue(csv.MoveTo(2));

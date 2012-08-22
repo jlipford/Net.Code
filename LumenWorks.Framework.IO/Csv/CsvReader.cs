@@ -74,14 +74,6 @@ namespace LumenWorks.Framework.IO.Csv
         private readonly IEnumerator<CsvLine> _enumerator;
         private readonly CsvLayout _csvLayout;
 
-
-        public bool SupportsMultiline { get; set; }
-
-        /// <summary>
-        /// Contains the field header comparer.
-        /// </summary>
-        private static readonly StringComparer _fieldHeaderComparer = StringComparer.CurrentCultureIgnoreCase;
-
         #region Settings
 
         /// <summary>
@@ -93,11 +85,6 @@ namespace LumenWorks.Framework.IO.Csv
         /// Contains the buffer size.
         /// </summary>
         private int _bufferSize;
-
-        /// <summary>
-        /// Contains the default action to take when a parsing error has occured.
-        /// </summary>
-        private QuotesInsideQuotedFieldAction _defaultQuotesInsideQuotedFieldAction;
 
         #endregion
 
@@ -138,17 +125,6 @@ namespace LumenWorks.Framework.IO.Csv
         /// </summary>
         private bool _firstRecordInCache;
 
-        /// <summary>
-        /// Indicates if one or more field are missing for the current record.
-        /// Resets after each successful record read.
-        /// </summary>
-        private bool _missingFieldFlag;
-
-        /// <summary>
-        /// Indicates if a parse error occured for the current record.
-        /// Resets after each successful record read.
-        /// </summary>
-        private bool _parseErrorFlag;
 
         #endregion
 
@@ -269,15 +245,15 @@ namespace LumenWorks.Framework.IO.Csv
         ///		<paramref name="bufferSize"/> must be 1 or more.
         /// </exception>
         public CsvReader(
-            TextReader reader, 
-            bool hasHeaders, 
-            char delimiter, 
-            char quote, 
-            char escape, 
-            char comment, 
-            ValueTrimmingOptions trimmingOptions, 
+            TextReader reader,
+            bool hasHeaders,
+            char delimiter,
+            char quote,
+            char escape,
+            char comment,
+            ValueTrimmingOptions trimmingOptions,
             int bufferSize)
-            : this (reader, bufferSize, new CsvLayout(quote, delimiter, escape, comment, hasHeaders), new CsvBehaviour(trimmingOptions))
+            : this(reader, bufferSize, new CsvLayout(quote, delimiter, escape, comment, hasHeaders), new CsvBehaviour(trimmingOptions))
         {
         }
 
@@ -306,7 +282,6 @@ namespace LumenWorks.Framework.IO.Csv
             }
 
             _currentRecordIndex = -1;
-            _defaultQuotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore;
 
             _csvLayout = layout;
             _behaviour = behaviour;
@@ -424,7 +399,7 @@ namespace LumenWorks.Framework.IO.Csv
         /// The header index will be appended to the specified name.
         /// </summary>
         /// <value>The default header name when it is an empty string or only whitespaces.</value>
-        public string DefaultHeaderName { set { _parser.DefaultHeaderName = value; }}
+        public string DefaultHeaderName { set { _parser.DefaultHeaderName = value; } }
 
         #endregion
 
@@ -482,24 +457,6 @@ namespace LumenWorks.Framework.IO.Csv
             {
                 return _currentRecordIndex;
             }
-        }
-
-        /// <summary>
-        /// Indicates if one or more field are missing for the current record.
-        /// Resets after each successful record read.
-        /// </summary>
-        public bool MissingFieldFlag
-        {
-            get { return _missingFieldFlag; }
-        }
-
-        /// <summary>
-        /// Indicates if a parse error occured for the current record.
-        /// Resets after each successful record read.
-        /// </summary>
-        public bool ParseErrorFlag
-        {
-            get { return _parseErrorFlag; }
         }
 
         #endregion
@@ -750,10 +707,7 @@ namespace LumenWorks.Framework.IO.Csv
 
             for (int i = 0; i < _fieldCount; i++)
             {
-                if (_parseErrorFlag)
-                    array[index + i] = null;
-                else
-                    array[index + i] = this[i];
+                array[index + i] = this[i];
             }
         }
 
@@ -885,7 +839,7 @@ namespace LumenWorks.Framework.IO.Csv
 
             _fields = _line.Fields.ToArray();
             _currentRecordIndex++;
-            
+
             return true;
         }
 
