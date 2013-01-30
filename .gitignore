@@ -5,3 +5,5 @@ _ReSharper.*
 *.psess
 bin
 obj
+packages
+!NuGet.exe
