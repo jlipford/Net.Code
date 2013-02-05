@@ -6,7 +6,7 @@ using System.Linq;
 using Moq;
 using NUnit.Framework;
 
-namespace Net.Code.YaDal.Tests.Unit
+namespace Net.Code.ADONet.Tests.Unit
 {
     [TestFixture]
     public class CommandBuilderTests

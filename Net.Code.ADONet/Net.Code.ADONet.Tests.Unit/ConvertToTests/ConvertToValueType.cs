@@ -1,23 +1,21 @@
 using System;
 using NUnit.Framework;
 
-namespace Net.Code.YaDal.Tests.Unit.ConvertToTests
+namespace Net.Code.ADONet.Tests.Unit.ConvertToTests
 {
     [TestFixture]
-    public class ConvertToNullabeleValueType
+    public class ConvertToValueType
     {
-        [Test]
-        public void FromNull_ShouldReturnNull()
+        [Test, ExpectedException(typeof(NullReferenceException))]
+        public void FromNull_ShouldThrow()
         {
-            var result = Convert(null);
-            Assert.IsNull(result);
+            Convert(null);
         }
 
-        [Test]
-        public void FromDBNull_ShouldReturnNull()
+        [Test, ExpectedException(typeof(NullReferenceException))]
+        public void FromDbNull_ShouldThrow()
         {
-            var result = Convert(DBNull.Value);
-            Assert.IsNull(result);
+            Convert(DBNull.Value);
         }
 
         [Test, ExpectedException(typeof(InvalidCastException))]
@@ -57,9 +55,9 @@ namespace Net.Code.YaDal.Tests.Unit.ConvertToTests
             Assert.AreEqual(1, result);
         }
 
-        private static int? Convert(object o)
+        private static int Convert(object o)
         {
-            return ConvertTo<int?>.From(o);
+            return ConvertTo<int>.From(o);
         }
     }
 }

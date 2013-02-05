@@ -1,7 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 
-namespace Net.Code.YaDal.Tests.Unit.TypeExtensionsTests
+namespace Net.Code.ADONet.Tests.Unit.TypeExtensionsTests
 {
     [TestFixture]
     public class ExtensionsForGettingRidOfDBNullTests

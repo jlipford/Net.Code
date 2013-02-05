@@ -1,7 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 
-namespace Net.Code.YaDal.Tests.Unit.ConvertToTests
+namespace Net.Code.ADONet.Tests.Unit.ConvertToTests
 {
     [TestFixture]
     public class ConvertToRefType

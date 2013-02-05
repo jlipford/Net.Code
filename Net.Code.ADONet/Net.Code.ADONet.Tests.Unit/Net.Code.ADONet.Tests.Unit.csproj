@@ -7,8 +7,8 @@
     <ProjectGuid>{9A8A8275-F7B1-421C-BA48-97E399D13A8F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Net.Code.YaDal.Tests.Unit</RootNamespace>
-    <AssemblyName>Net.Code.YaDal.Tests.Unit</AssemblyName>
+    <RootNamespace>Net.Code.ADONet.Tests.Unit</RootNamespace>
+    <AssemblyName>Net.Code.ADONet.Tests.Unit</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -70,9 +70,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Net.Code.YaDal\Net.Code.YaDal.csproj">
+    <ProjectReference Include="..\Net.Code.ADONet\Net.Code.ADONet.csproj">
       <Project>{F0B49F95-0B64-4FCE-AE4D-D9CE2A48A4F1}</Project>
-      <Name>Net.Code.YaDal</Name>
+      <Name>Net.Code.ADONet</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

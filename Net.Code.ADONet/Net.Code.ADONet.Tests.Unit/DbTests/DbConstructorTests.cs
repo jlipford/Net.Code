@@ -4,7 +4,7 @@ using System.Data;
 using Moq;
 using NUnit.Framework;
 
-namespace Net.Code.YaDal.Tests.Unit.DbTests
+namespace Net.Code.ADONet.Tests.Unit.DbTests
 {
     [TestFixture]
     public class DbConstructorTests

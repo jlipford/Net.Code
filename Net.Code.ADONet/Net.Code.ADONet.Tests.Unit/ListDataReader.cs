@@ -4,7 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 
-namespace Net.Code.YaDal.Tests.Unit
+namespace Net.Code.ADONet.Tests.Unit
 {
     public static class ListDataReader
     {

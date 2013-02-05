@@ -14,7 +14,7 @@ using System.Reflection;
 // usage: using (var db = new Db()) {}; from there it should be discoverable.
 // inline SQL FTW!
 
-namespace Net.Code.YaDal
+namespace Net.Code.ADONet
 {
     public interface IConnectionFactory
     {

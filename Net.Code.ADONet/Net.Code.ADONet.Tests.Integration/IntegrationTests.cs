@@ -8,7 +8,7 @@ using System.Linq;
 using Machine.Specifications;
 
 // ReSharper disable UnusedMember.Local
-namespace Net.Code.YaDal.Tests.Integration
+namespace Net.Code.ADONet.Tests.Integration
 {
     class MyRequiredAttribute : RequiredAttribute
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using NUnit.Framework;
 
-namespace Net.Code.YaDal.Tests.Unit.ToDatatableTests
+namespace Net.Code.ADONet.Tests.Unit.ToDatatableTests
 {
     [TestFixture]
     public class EnumerableToDatatableTests

@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Code.YaDal", "Net.Code.YaDal\Net.Code.YaDal.csproj", "{F0B49F95-0B64-4FCE-AE4D-D9CE2A48A4F1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Code.ADONet", "Net.Code.ADONet\Net.Code.ADONet.csproj", "{F0B49F95-0B64-4FCE-AE4D-D9CE2A48A4F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Code.YaDal.Tests.Unit", "Net.Code.YaDal.Tests.Unit\Net.Code.YaDal.Tests.Unit.csproj", "{9A8A8275-F7B1-421C-BA48-97E399D13A8F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Code.ADONet.Tests.Unit", "Net.Code.ADONet.Tests.Unit\Net.Code.ADONet.Tests.Unit.csproj", "{9A8A8275-F7B1-421C-BA48-97E399D13A8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Code.YaDal.Tests.Integration", "Net.Code.YaDal.Tests.Integration\Net.Code.YaDal.Tests.Integration.csproj", "{B912550C-A54D-46A9-BC22-A19AA87F2D3B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Code.ADONet.Tests.Integration", "Net.Code.ADONet.Tests.Integration\Net.Code.ADONet.Tests.Integration.csproj", "{B912550C-A54D-46A9-BC22-A19AA87F2D3B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{CF11235F-AE8D-4E08-86E7-AC31FE0C6989}"
 	ProjectSection(SolutionItems) = preProject

@@ -7,8 +7,8 @@
     <ProjectGuid>{F0B49F95-0B64-4FCE-AE4D-D9CE2A48A4F1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Net.Code.YaDal</RootNamespace>
-    <AssemblyName>Net.Code.YaDal</AssemblyName>
+    <RootNamespace>Net.Code.ADONet</RootNamespace>
+    <AssemblyName>Net.Code.ADONet</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -39,8 +39,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="YaDal.cs" />
+    <Compile Include="Db.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Net.Code.YaDal.csproj.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
