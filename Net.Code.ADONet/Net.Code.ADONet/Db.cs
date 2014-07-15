@@ -338,7 +338,7 @@ namespace Net.Code.ADONet
             } while (reader.NextResult());
         }
 
-        private static IEnumerable<dynamic> GetResultSet(IDataReader reader)
+        public static IEnumerable<dynamic> GetResultSet(IDataReader reader)
         {
             while (reader.Read()) yield return reader.ToExpando();
         }
@@ -384,7 +384,12 @@ namespace Net.Code.ADONet
         {
             using (var reader = Execute().Reader())
             {
-                return reader.ToMultiResultSet();
+                //return reader.ToMultiResultSet();
+
+                do
+                {
+                    yield return DataReaderExtensions.GetResultSet(reader);
+                } while (reader.NextResult());
             }
         }
 
